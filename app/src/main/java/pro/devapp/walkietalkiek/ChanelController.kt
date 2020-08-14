@@ -129,10 +129,14 @@ class ChanelController(
                     if (key.isWritable) {
                         val sc = key.channel() as SocketChannel
                         if (outputQueue.isNotEmpty()) {
-                            val buf =
-                                outputQueue.pollFirst() //ByteBuffer.wrap("test".toByteArray());
-                            sc.write(buf);
-                            println("send: ${buf.array().size}")
+                            try {
+                                val buf =
+                                    outputQueue.pollFirst() //ByteBuffer.wrap("test".toByteArray());
+                                sc.write(buf);
+                                println("send: ${buf.array().size}")
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                         }
 //                        if(outputQueue.isEmpty()){
 //                            key.interestOps(SelectionKey.OP_READ)

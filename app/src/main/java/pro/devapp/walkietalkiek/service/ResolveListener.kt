@@ -7,12 +7,12 @@ import pro.devapp.walkietalkiek.ChanelController
 import java.lang.String
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
-import java.nio.channels.DatagramChannel
 import java.nio.channels.SelectionKey
 import java.nio.channels.Selector
 import java.nio.channels.SocketChannel
 import java.util.concurrent.Executors
-import kotlin.text.format
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.text.toByteArray
 
 
 class ResolveListener(private val chanelController: ChanelController) : NsdManager.ResolveListener {
@@ -50,116 +50,102 @@ class ResolveListener(private val chanelController: ChanelController) : NsdManag
     private val selector = Selector.open()
     private fun handleSocketConnection(addr: InetSocketAddress) {
         val socketChannel = SocketChannel.open(addr)
-        //    socketChannel.configureBlocking( false )
+        socketChannel.configureBlocking(false)
 
         executor.execute() {
-//            val sectionKey = socketChannel.register( selector, 0, null )
-//            val  interestOps = sectionKey.interestOps()
-//            sectionKey.interestOps( interestOps or SelectionKey.OP_READ )
-            while (true) {
-//                    if(sectionKey.isReadable){
-//                        val sc =
-//                            sectionKey.channel() as SocketChannel
-//                        val data = ByteBuffer.allocate(sc.socket().sendBufferSize)
-//                        println("new message: " + sc.socket().inetAddress.hostAddress)
+            val sectionKey = socketChannel.register(selector, 0, null)
+            val interestOps = sectionKey.interestOps()
+            sectionKey.interestOps(interestOps or SelectionKey.OP_READ)
+        }
+
+        startHandler()
+
+//        executor.execute() {
+////            val sectionKey = socketChannel.register( selector, 0, null )
+////            val  interestOps = sectionKey.interestOps()
+////            sectionKey.interestOps( interestOps or SelectionKey.OP_READ )
+//            while (true) {
+////                    if(sectionKey.isReadable){
+////                        val sc =
+////                            sectionKey.channel() as SocketChannel
+////                        val data = ByteBuffer.allocate(sc.socket().sendBufferSize)
+////                        println("new message: " + sc.socket().inetAddress.hostAddress)
+////                    }
+//                //socketChannel.read(byteBuffer)
+//
+//                try {
+//                    //   val buffer = ByteBuffer.wrap(String("test").bytes)
+//                    if (socketChannel.isConnected) {
+//                        // socketChannel.write(buffer)
+//
+//                        val buffer = ByteBuffer.allocate(socketChannel.socket().receiveBufferSize)
+//                        //      println("new message: " + socketChannel.socket().inetAddress.hostAddress)
+//                        val readCount = socketChannel.read(buffer)
+//                        if (readCount > 0) {
+//                            val rspData = ByteArray(readCount)
+//                            System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
+//                            //  buffer.flip()
+//                            println("message: ${kotlin.text.String(rspData).trim()}")
+//                        }
+//                    } else {
+//                        // executor.shutdown()
+//                        socketChannel.close()
+//                        break
 //                    }
-                //socketChannel.read(byteBuffer)
-
-                try {
-                    //   val buffer = ByteBuffer.wrap(String("test").bytes)
-                    if (socketChannel.isConnected) {
-                        // socketChannel.write(buffer)
-
-                        val buffer = ByteBuffer.allocate(socketChannel.socket().receiveBufferSize)
-                        //      println("new message: " + socketChannel.socket().inetAddress.hostAddress)
-                        val readCount = socketChannel.read(buffer)
-                        if (readCount > 0) {
-                            val rspData = ByteArray(readCount)
-                            System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
-                            //  buffer.flip()
-                            println("message: ${kotlin.text.String(rspData).trim()}")
-                        }
-                    } else {
-                        // executor.shutdown()
-                        socketChannel.close()
-                        break
-                    }
-                    //    buffer.clear()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                //  Log.d("ResolveListener", "sending....")
-                // Thread.sleep(2000)
-            }
-
-        }
+//                    //    buffer.clear()
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                }
+//                //  Log.d("ResolveListener", "sending....")
+//                // Thread.sleep(2000)
+//            }
+//
+//        }
     }
 
-    private fun handleConnection(addr: InetSocketAddress) {
-        // https://stackoverflow.com/questions/31337387/datagramchannel-not-receiving-any-bytes-on-android
-        // https://stackoverflow.com/questions/14690226/how-to-use-selector-object-with-datagramchannel-to-do-non-blocking-packet-recept
-        val selector = Selector.open()
-        val datagramChannel = DatagramChannel.open()
-        val socket = datagramChannel.socket()
-        datagramChannel.configureBlocking(false)
-        socket.reuseAddress = true
-        datagramChannel.register(selector, SelectionKey.OP_WRITE)
-        datagramChannel.connect(addr)
-        val executor = Executors.newCachedThreadPool()
-        executor.execute() {
-            try {
-                while (selector.isOpen) {
+    private val isHandlerStarted = AtomicBoolean(false)
+
+    private fun startHandler() {
+        if (isHandlerStarted.compareAndSet(false, true)) {
+            executor.execute {
+                while (true) {
                     selector.select()
-                    val keys =
-                        selector.selectedKeys().iterator()
-                    while (keys.hasNext()) {
-                        val key = keys.next()
+                    val it = selector.selectedKeys().iterator()
+                    while (it.hasNext()) {
+                        val key = it.next()
+                        it.remove();
+                        if (!key.isValid) {
+                            continue;
+                        }
+
                         if (key.isReadable) {
-                            handleRead(key)
+                            val sc = key.channel() as SocketChannel
+                            val buffer = ByteBuffer.allocate(sc.socket().receiveBufferSize)
+
+                            val readCount = sc.read(buffer)
+//                        if (readCount == -1) {
+//                            key.channel().close()
+//                            key.cancel()
+//                            continue
+//                        }
+                            if (readCount > 0) {
+                                println("new message: " + sc.socket().inetAddress.hostAddress)
+                                val rspData = ByteArray(readCount)
+                                System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
+                                //  buffer.flip()
+                                println("message: ${String(rspData).trim()}")
+
+                                sc.write(ByteBuffer.wrap("received".toByteArray()));
+                            }
+
+                            //  key.interestOps(SelectionKey.OP_WRITE)
                         }
-                        if (key.isValid && key.isWritable) {
-                            handleWrite(key, addr)
-                        }
-                        keys.remove()
+
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            if (!selector.isOpen) {
-                executor.shutdown()
             }
         }
     }
 
-    private val byteBuffer = ByteBuffer.allocate(256)
-    private fun handleRead(key: SelectionKey) {
-        val channel = key.channel() as DatagramChannel
 
-        byteBuffer.clear()
-        val from = channel.read(byteBuffer)
-        byteBuffer.flip()
-
-        Log.i(
-            LOG_TAG,
-            String.format("Received %d bytes from %s", byteBuffer.limit(), from)
-        )
-
-        key.interestOps(SelectionKey.OP_WRITE)
-    }
-
-    private fun handleWrite(key: SelectionKey, addr: InetSocketAddress) {
-        val channel =
-            key.channel() as DatagramChannel
-
-        byteBuffer.clear()
-        byteBuffer.putInt(1234)
-        byteBuffer.flip()
-
-        val bytes = channel.send(byteBuffer, addr)
-
-        Log.i(LOG_TAG, kotlin.String.format("Send %d bytes to %s", bytes, addr))
-
-        key.interestOps(SelectionKey.OP_READ)
-    }
 }
