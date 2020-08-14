@@ -92,10 +92,8 @@ class ChanelController(
 //                }
 
                     if (key.isAcceptable()) {
-                        val newClient = serverSocketChannel?.accept()
-
-//                    val ssc = key.channel() as ServerSocketChannel
-//                    val newClient = ssc.accept()
+                        val ssc = key.channel() as ServerSocketChannel
+                        val newClient = ssc.accept()
                         newClient?.configureBlocking(false)
                         newClient?.register(selector, SelectionKey.OP_READ)
                         // sockets.add(newClient)
@@ -103,17 +101,20 @@ class ChanelController(
                     }
 
                     if (key.isReadable()) {
-                        val sc =
-                            key.channel() as SocketChannel
-                        val buffer = ByteBuffer.allocate(sc.socket().sendBufferSize)
+                        val sc = key.channel() as SocketChannel
+                        val buffer = ByteBuffer.allocate(sc.socket().receiveBufferSize)
                         println("new message: " + sc.socket().inetAddress.hostAddress)
-                        sc.read(buffer)
-//                       if (sc.read(buffer) === -1) {
-//                           continue
-//                       }
-                        //     buffer.flip()
-                        println("message: ${String(buffer.array()).trim()}")
-                        // sc.close()
+                        val readCount = sc.read(buffer)
+                        if (readCount == -1) {
+                            key.channel().close()
+                            key.cancel()
+                            continue
+                        }
+                        val rspData = ByteArray(readCount)
+                        System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
+                        //  buffer.flip()
+                        println("message: ${String(rspData).trim()}")
+                        //  sc.close()
                     }
 
 //                if(key.isWritable){

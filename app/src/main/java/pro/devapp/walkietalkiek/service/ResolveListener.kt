@@ -12,6 +12,7 @@ import java.nio.channels.SelectionKey
 import java.nio.channels.Selector
 import java.nio.channels.SocketChannel
 import java.util.concurrent.Executors
+import kotlin.text.format
 
 
 class ResolveListener(private val chanelController: ChanelController) : NsdManager.ResolveListener {
@@ -67,9 +68,12 @@ class ResolveListener(private val chanelController: ChanelController) : NsdManag
                 //socketChannel.read(byteBuffer)
 
                 try {
-                    val buffer = ByteBuffer.wrap("test".toByteArray())
+                    val buffer = ByteBuffer.wrap(String("test").bytes)
                     if (socketChannel.isConnected) {
                         socketChannel.write(buffer)
+                    } else {
+                        executor.shutdown()
+                        break
                     }
                     buffer.clear()
                 } catch (e: Exception) {
