@@ -19,6 +19,7 @@ class Resolver(
     }
 
     fun resolve(nsdServiceInfo: NsdServiceInfo) {
+        Log.d(LOG_TAG, "resolve")
         servicesResolverQueue.add(nsdServiceInfo)
         resolveNext()
     }
@@ -35,12 +36,12 @@ class Resolver(
                     }
 
                     override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
-                        isResolverInProgress.set(false)
                         val addr = InetSocketAddress(serviceInfo.host, serviceInfo.port)
                         Log.d(LOG_TAG, "onServiceResolved: $addr")
                         if (!addr.address.isMulticastAddress) {
                             resultListener(addr)
                         }
+                        isResolverInProgress.set(false)
                         resolveNext()
                     }
                 })

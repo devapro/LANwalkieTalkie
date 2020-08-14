@@ -34,7 +34,7 @@ class ChanelController(
 
     private val executor = Executors.newCachedThreadPool()
 
-    private val client = Client(executor)
+    private val client = Clients()
 
     private val resolver = Resolver(nsdManager) {
         initClient(it)
@@ -64,6 +64,7 @@ class ChanelController(
             unregisterService(registrationListener)
         }
         executor.shutdown()
+        client.stop()
     }
 
     fun sendMessage(byteBuffer: ByteBuffer) {
@@ -84,7 +85,7 @@ class ChanelController(
             serverSocketChannel!!.validOps(),
             null
         )//SelectionKey.OP_ACCEPT
-
+        //    val buffer = ByteBuffer.allocate(socket?.receiveBufferSize ?: 256)
         executor.execute() {
             while (true) {
                 selector.select()
@@ -97,12 +98,12 @@ class ChanelController(
                     }
 
                     // Finish connection in case of an error
-//                if (key.isConnectable()) {
-//                    val ssc = key.channel() as SocketChannel
-//                    if (ssc.isConnectionPending()) {
-//                        ssc.finishConnect()
+//                    if (key.isConnectable()) {
+//                        val ssc = key.channel() as SocketChannel
+//                        if (ssc.isConnectionPending()) {
+//                            ssc.finishConnect()
+//                        }
 //                    }
-//                }
 
                     if (key.isAcceptable) {
                         val ssc = key.channel() as ServerSocketChannel
@@ -136,6 +137,10 @@ class ChanelController(
 
                     if (key.isWritable) {
                         val sc = key.channel() as SocketChannel
+                        if (sc.isConnectionPending || !sc.isConnected) {
+                            sc.finishConnect()
+                            continue
+                        }
                         if (outputQueue.isNotEmpty()) {
                             try {
                                 val buf =
@@ -144,6 +149,8 @@ class ChanelController(
                                 println("send: ${buf.array().size}")
                             } catch (e: Exception) {
                                 e.printStackTrace()
+                                sc.finishConnect()
+                                sc.close()
                             }
                         }
 //                        if(outputQueue.isEmpty()){
@@ -152,16 +159,15 @@ class ChanelController(
 //                            key.interestOps(SelectionKey.OP_WRITE)
 //                        }
 
-                        if (outputQueue.isEmpty()) {
-                            val buffer = ByteBuffer.allocate(sc.socket().receiveBufferSize)
-                            val readCount = sc.read(buffer)
-                            if (readCount > 0) {
-                                val rspData = ByteArray(readCount)
-                                System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
-                                //  buffer.flip()
-                                println("message: ${String(rspData).trim()}")
-                            }
-                        }
+//                        if (outputQueue.isEmpty()) {
+//                            val readCount = sc.read(buffer)
+//                            if (readCount > 0) {
+//                                val rspData = ByteArray(readCount)
+//                                System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
+//                                //  buffer.flip()
+//                                println("message: ${String(rspData).trim()}")
+//                            }
+//                        }
                     }
                 }
             }
@@ -201,9 +207,9 @@ class ChanelController(
             Log.d(LOG_TAG, "onServiceResolved: SELF")
             return
         }
-        //resolver.resolve(serviceInfo)
+        resolver.resolve(serviceInfo)
 
-        nsdManager.resolveService(serviceInfo, resolveListener)
+        //nsdManager.resolveService(serviceInfo, resolveListener)
     }
 
     private fun initClient(addr: InetSocketAddress) {
