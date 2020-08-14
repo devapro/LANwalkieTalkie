@@ -16,6 +16,7 @@ import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.nio.channels.spi.SelectorProvider
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingDeque
 
 
 class ChanelController(
@@ -31,6 +32,10 @@ class ChanelController(
 
     var currentServiceName: String? = null
         private set
+
+    private val executor = Executors.newCachedThreadPool()
+
+    private val outputQueue = LinkedBlockingDeque<ByteBuffer>()
 
     companion object {
         const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */ /* WiFi Walkie Talkie */
@@ -51,6 +56,9 @@ class ChanelController(
         }
     }
 
+    fun sendMessage(byteBuffer: ByteBuffer) {
+        outputQueue.add(byteBuffer)
+    }
 
     private fun registerService() {
         //init server
@@ -62,7 +70,6 @@ class ChanelController(
         val address = InetSocketAddress(6543)
         val socket = serverSocketChannel?.socket()
         //  socket?.reuseAddress = true
-        //socket
         socket?.bind(address)
         serverSocketChannel?.configureBlocking(false)
         val selectKy = serverSocketChannel?.register(
@@ -71,7 +78,6 @@ class ChanelController(
             null
         )//SelectionKey.OP_ACCEPT
 
-        val executor = Executors.newCachedThreadPool()
         executor.execute() {
             while (true) {
                 selector.select()
@@ -79,7 +85,7 @@ class ChanelController(
                 while (it.hasNext()) {
                     val key = it.next()
                     it.remove();
-                    if (!key.isValid()) {
+                    if (!key.isValid) {
                         continue;
                     }
 
@@ -91,42 +97,60 @@ class ChanelController(
 //                    }
 //                }
 
-                    if (key.isAcceptable()) {
+                    if (key.isAcceptable) {
                         val ssc = key.channel() as ServerSocketChannel
                         val newClient = ssc.accept()
                         newClient?.configureBlocking(false)
-                        newClient?.register(selector, SelectionKey.OP_READ)
+                        newClient?.register(selector, SelectionKey.OP_WRITE)
                         // sockets.add(newClient)
-                        println("new client: " + newClient?.socket()?.inetAddress?.hostAddress)
+                        println("new client: " + newClient?.socket()?.inetAddress?.hostName)
                     }
 
-                    if (key.isReadable()) {
+//                    if (key.isReadable) {
+//                        val sc = key.channel() as SocketChannel
+//                        val buffer = ByteBuffer.allocate(sc.socket().receiveBufferSize)
+//                        println("new message: " + sc.socket().inetAddress.hostAddress)
+//                        val readCount = sc.read(buffer)
+////                        if (readCount == -1) {
+////                            key.channel().close()
+////                            key.cancel()
+////                            continue
+////                        }
+//                        if(readCount > 0){
+//                            val rspData = ByteArray(readCount)
+//                            System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
+//                            //  buffer.flip()
+//                            println("message: ${String(rspData).trim()}")
+//                        }
+//
+//                        key.interestOps(SelectionKey.OP_WRITE)
+//                    }
+
+                    if (key.isWritable) {
                         val sc = key.channel() as SocketChannel
-                        val buffer = ByteBuffer.allocate(sc.socket().receiveBufferSize)
-                        println("new message: " + sc.socket().inetAddress.hostAddress)
-                        val readCount = sc.read(buffer)
-                        if (readCount == -1) {
-                            key.channel().close()
-                            key.cancel()
-                            continue
+                        if (outputQueue.isNotEmpty()) {
+                            val buf =
+                                outputQueue.pollFirst() //ByteBuffer.wrap("test".toByteArray());
+                            sc.write(buf);
+                            println("send: ${buf.array().size}")
                         }
-                        val rspData = ByteArray(readCount)
-                        System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
-                        //  buffer.flip()
-                        println("message: ${String(rspData).trim()}")
-                        //  sc.close()
-                    }
+//                        if(outputQueue.isEmpty()){
+//                            key.interestOps(SelectionKey.OP_READ)
+//                        } else {
+//                            key.interestOps(SelectionKey.OP_WRITE)
+//                        }
 
-//                if(key.isWritable){
-//                    val sc = key.channel() as SocketChannel
-//                    val buf = ByteBuffer.wrap("test".toByteArray());
-//                    sc.write(buf);
-//
-//                    println("send: test")
-//                    sc.close()
-//
-//                    //key.interestOps(SelectionKey.OP_READ)
-//                }
+                        if (outputQueue.isEmpty()) {
+                            val buffer = ByteBuffer.allocate(sc.socket().receiveBufferSize)
+                            val readCount = sc.read(buffer)
+                            if (readCount > 0) {
+                                val rspData = ByteArray(readCount)
+                                System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
+                                //  buffer.flip()
+                                println("message: ${String(rspData).trim()}")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -156,15 +180,6 @@ class ChanelController(
         result.exceptionOrNull()?.apply { }
     }
 
-    fun acceptConnection() {
-//        val executor = Executors.newCachedThreadPool()
-//        executor.execute(){
-//            while (true){
-//                serverSocketChannel?.accept()
-//                sleep(1000)
-//            }
-//        }
-    }
 
     fun resolveService(serviceInfo: NsdServiceInfo) {
         //TODO add to quie then get from it and resolve sequinse

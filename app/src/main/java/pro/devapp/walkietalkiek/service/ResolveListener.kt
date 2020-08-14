@@ -21,6 +21,8 @@ class ResolveListener(private val chanelController: ChanelController) : NsdManag
         const val LOG_TAG = "ResolveListener"
     }
 
+    private val executor = Executors.newCachedThreadPool()
+
     override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
         Log.i(
             LOG_TAG,
@@ -49,11 +51,7 @@ class ResolveListener(private val chanelController: ChanelController) : NsdManag
     private fun handleSocketConnection(addr: InetSocketAddress) {
         val socketChannel = SocketChannel.open(addr)
         //    socketChannel.configureBlocking( false )
-//        val connected = socketChannel.connect(addr)
-//        if(connected){
-//
-//        }
-        val executor = Executors.newCachedThreadPool()
+
         executor.execute() {
 //            val sectionKey = socketChannel.register( selector, 0, null )
 //            val  interestOps = sectionKey.interestOps()
@@ -68,19 +66,30 @@ class ResolveListener(private val chanelController: ChanelController) : NsdManag
                 //socketChannel.read(byteBuffer)
 
                 try {
-                    val buffer = ByteBuffer.wrap(String("test").bytes)
+                    //   val buffer = ByteBuffer.wrap(String("test").bytes)
                     if (socketChannel.isConnected) {
-                        socketChannel.write(buffer)
+                        // socketChannel.write(buffer)
+
+                        val buffer = ByteBuffer.allocate(socketChannel.socket().receiveBufferSize)
+                        //      println("new message: " + socketChannel.socket().inetAddress.hostAddress)
+                        val readCount = socketChannel.read(buffer)
+                        if (readCount > 0) {
+                            val rspData = ByteArray(readCount)
+                            System.arraycopy(buffer.array(), 0, rspData, 0, readCount)
+                            //  buffer.flip()
+                            println("message: ${kotlin.text.String(rspData).trim()}")
+                        }
                     } else {
-                        executor.shutdown()
+                        // executor.shutdown()
+                        socketChannel.close()
                         break
                     }
-                    buffer.clear()
+                    //    buffer.clear()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                Log.d("ResolveListener", "sending....")
-                Thread.sleep(2000)
+                //  Log.d("ResolveListener", "sending....")
+                // Thread.sleep(2000)
             }
 
         }
