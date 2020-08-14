@@ -49,8 +49,8 @@ class RegistrationListener(private val chanelController: ChanelController) :
 
         //  chanelController.acceptConnection()
 
-        //   handleConnection(6543)
-        handlerConnectionSocket()
+        handleConnection(serviceInfo.port)
+        //  handlerConnectionSocket()
     }
 
     private fun handlerConnectionSocket() {

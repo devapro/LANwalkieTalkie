@@ -5,7 +5,6 @@ import android.net.nsd.NsdServiceInfo
 import android.util.Log
 import pro.devapp.walkietalkiek.ChanelController
 import java.lang.String
-import java.lang.Thread.sleep
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
@@ -40,42 +39,46 @@ class ResolveListener(private val chanelController: ChanelController) : NsdManag
         val addr = InetSocketAddress(serviceInfo.host, serviceInfo.port)
         Log.d("ResolveListener", "onServiceResolved: $addr")
         if (!addr.address.isMulticastAddress) {
-            //   handleConnection(addr)
+            //handleConnection(addr)
             handleSocketConnection(addr)
         }
     }
 
+    private val selector = Selector.open()
     private fun handleSocketConnection(addr: InetSocketAddress) {
-        var sc: SocketChannel? = null
-        try {
-
-            // Connect
-            sc = SocketChannel.open();
-            sc.connect(addr);
-
-
-            // Read the time from the remote host. For simplicity we assume
-            // that the time comes back to us in a single packet, so that we
-            // only need to read once.
-
-            // byte[] message = UdpUtil.messageToByteMessage(new messages.Teste("hello there"));
-//            val executor = Executors.newCachedThreadPool()
-//            executor.execute(){
-////                val  selector = SelectorProvider.provider().openSelector()
-////                sc?.register(selector, SelectionKey.OP_READ)
+        val socketChannel = SocketChannel.open(addr)
+        //    socketChannel.configureBlocking( false )
+//        val connected = socketChannel.connect(addr)
+//        if(connected){
 //
-//                val buf = ByteBuffer.wrap("test".toByteArray());
-//                sc.write(buf);
-//                sleep(1000)
-//            }
+//        }
+        val executor = Executors.newCachedThreadPool()
+        executor.execute() {
+//            val sectionKey = socketChannel.register( selector, 0, null )
+//            val  interestOps = sectionKey.interestOps()
+//            sectionKey.interestOps( interestOps or SelectionKey.OP_READ )
+            while (true) {
+//                    if(sectionKey.isReadable){
+//                        val sc =
+//                            sectionKey.channel() as SocketChannel
+//                        val data = ByteBuffer.allocate(sc.socket().sendBufferSize)
+//                        println("new message: " + sc.socket().inetAddress.hostAddress)
+//                    }
+                //socketChannel.read(byteBuffer)
 
-            val buf = ByteBuffer.wrap("test".toByteArray());
-            sc.write(buf);
-            sleep(1000)
+                try {
+                    val buffer = ByteBuffer.wrap("test".toByteArray())
+                    if (socketChannel.isConnected) {
+                        socketChannel.write(buffer)
+                    }
+                    buffer.clear()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                Log.d("ResolveListener", "sending....")
+                Thread.sleep(2000)
+            }
 
-        } finally {
-            // Make sure we close the channel (and hence the socket)
-            sc?.close()
         }
     }
 

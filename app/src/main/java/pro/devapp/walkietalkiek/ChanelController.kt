@@ -10,7 +10,12 @@ import pro.devapp.walkietalkiek.service.DiscoveryListener
 import pro.devapp.walkietalkiek.service.RegistrationListener
 import pro.devapp.walkietalkiek.service.ResolveListener
 import java.net.InetSocketAddress
+import java.nio.ByteBuffer
+import java.nio.channels.SelectionKey
 import java.nio.channels.ServerSocketChannel
+import java.nio.channels.SocketChannel
+import java.nio.channels.spi.SelectorProvider
+import java.util.concurrent.Executors
 
 
 class ChanelController(
@@ -46,61 +51,71 @@ class ChanelController(
         }
     }
 
+
     private fun registerService() {
         //init server
-//        val  selector = SelectorProvider.provider().openSelector()
+        val selector = SelectorProvider.provider().openSelector()
         serverSocketChannel = ServerSocketChannel.open()
-        serverSocketChannel?.configureBlocking(false)
+
         // https://stackoverflow.com/questions/16825403/android-serversocketchannel-binding-to-loopback-address
         // "::0",
         val address = InetSocketAddress(6543)
         val socket = serverSocketChannel?.socket()
-        socket?.reuseAddress = true
+        //  socket?.reuseAddress = true
+        //socket
         socket?.bind(address)
-//        serverSocketChannel?.register(selector, SelectionKey.OP_ACCEPT)
+        serverSocketChannel?.configureBlocking(false)
+        val selectKy = serverSocketChannel?.register(
+            selector,
+            serverSocketChannel!!.validOps(),
+            null
+        )//SelectionKey.OP_ACCEPT
 
-//        val executor = Executors.newCachedThreadPool()
-//        executor.execute(){
-//            selector.select()
-//            val it = selector.selectedKeys().iterator()
-//            while (it.hasNext()) {
-//                val key = it.next()
-//                it.remove();
-//                if (!key.isValid()) {
-//                    continue;
-//                }
-//
-//                // Finish connection in case of an error
+        val executor = Executors.newCachedThreadPool()
+        executor.execute() {
+            while (true) {
+                selector.select()
+                val it = selector.selectedKeys().iterator()
+                while (it.hasNext()) {
+                    val key = it.next()
+                    it.remove();
+                    if (!key.isValid()) {
+                        continue;
+                    }
+
+                    // Finish connection in case of an error
 //                if (key.isConnectable()) {
 //                    val ssc = key.channel() as SocketChannel
 //                    if (ssc.isConnectionPending()) {
 //                        ssc.finishConnect()
 //                    }
 //                }
-//
-//                if (key.isAcceptable()) {
-//                    val ssc =
-//                        key.channel() as ServerSocketChannel
+
+                    if (key.isAcceptable()) {
+                        val newClient = serverSocketChannel?.accept()
+
+//                    val ssc = key.channel() as ServerSocketChannel
 //                    val newClient = ssc.accept()
-//                    newClient.configureBlocking(false)
-//                    newClient.register(selector, SelectionKey.OP_READ)
-//                   // sockets.add(newClient)
-//                    println("new client: " + newClient.socket().inetAddress.hostAddress)
-//                }
-//
-//                if (key.isReadable()) {
-//                    val sc =
-//                        key.channel() as SocketChannel
-//                    val data = ByteBuffer.allocate(sc.socket().sendBufferSize)
-//                    println("new message: " + sc.socket().inetAddress.hostAddress)
-//                    if (sc.read(data) === -1) {
-//                        continue
-//                    }
-//                    data.flip()
-//                    println("message: $data")
-//                    sc.close()
-//                }
-//
+                        newClient?.configureBlocking(false)
+                        newClient?.register(selector, SelectionKey.OP_READ)
+                        // sockets.add(newClient)
+                        println("new client: " + newClient?.socket()?.inetAddress?.hostAddress)
+                    }
+
+                    if (key.isReadable()) {
+                        val sc =
+                            key.channel() as SocketChannel
+                        val buffer = ByteBuffer.allocate(sc.socket().sendBufferSize)
+                        println("new message: " + sc.socket().inetAddress.hostAddress)
+                        sc.read(buffer)
+//                       if (sc.read(buffer) === -1) {
+//                           continue
+//                       }
+                        //     buffer.flip()
+                        println("message: ${String(buffer.array()).trim()}")
+                        // sc.close()
+                    }
+
 //                if(key.isWritable){
 //                    val sc = key.channel() as SocketChannel
 //                    val buf = ByteBuffer.wrap("test".toByteArray());
@@ -111,8 +126,9 @@ class ChanelController(
 //
 //                    //key.interestOps(SelectionKey.OP_READ)
 //                }
-//            }
-//        }
+                }
+            }
+        }
 
         val result = deviceInfoRepository.getCurrentDeviceInfo()
         result.getOrNull()?.apply {
