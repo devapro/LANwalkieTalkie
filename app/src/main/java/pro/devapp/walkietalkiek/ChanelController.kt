@@ -30,11 +30,19 @@ class ChanelController(
 
     var serverSocketChannel: ServerSocketChannel? = null
 
-    var currentServiceName: String? = null
-        private set
+    private var currentServiceName: String? = null
 
     private val executor = Executors.newCachedThreadPool()
 
+    private val client = Client(executor)
+
+    private val resolver = Resolver(nsdManager) {
+        initClient(it)
+    }
+
+    /**
+     * Data for sending
+     */
     private val outputQueue = LinkedBlockingDeque<ByteBuffer>()
 
     companion object {
@@ -44,8 +52,9 @@ class ChanelController(
 
     fun startDiscovery() {
         nsdManager.apply {
-            discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+            initServer()
             registerService()
+            discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
         }
     }
 
@@ -54,19 +63,17 @@ class ChanelController(
             stopServiceDiscovery(discoveryListener)
             unregisterService(registrationListener)
         }
+        executor.shutdown()
     }
 
     fun sendMessage(byteBuffer: ByteBuffer) {
         outputQueue.add(byteBuffer)
     }
 
-    private fun registerService() {
-        //init server
+    private fun initServer() {
         val selector = SelectorProvider.provider().openSelector()
         serverSocketChannel = ServerSocketChannel.open()
-
         // https://stackoverflow.com/questions/16825403/android-serversocketchannel-binding-to-loopback-address
-        // "::0",
         val address = InetSocketAddress(6543)
         val socket = serverSocketChannel?.socket()
         //  socket?.reuseAddress = true
@@ -100,10 +107,11 @@ class ChanelController(
                     if (key.isAcceptable) {
                         val ssc = key.channel() as ServerSocketChannel
                         val newClient = ssc.accept()
-                        newClient?.configureBlocking(false)
-                        newClient?.register(selector, SelectionKey.OP_WRITE)
-                        // sockets.add(newClient)
-                        println("new client: " + newClient?.socket()?.inetAddress?.hostName)
+                        newClient?.apply {
+                            configureBlocking(false)
+                            register(selector, SelectionKey.OP_WRITE)
+                            println("new client: " + socket().inetAddress.hostName)
+                        }
                     }
 
 //                    if (key.isReadable) {
@@ -158,7 +166,9 @@ class ChanelController(
                 }
             }
         }
+    }
 
+    private fun registerService() {
         val result = deviceInfoRepository.getCurrentDeviceInfo()
         result.getOrNull()?.apply {
             /* Android NSD implementation is very unstable when services
@@ -186,7 +196,17 @@ class ChanelController(
 
 
     fun resolveService(serviceInfo: NsdServiceInfo) {
-        //TODO add to quie then get from it and resolve sequinse
+        // check for self add to list
+        if (serviceInfo.serviceName == currentServiceName) {
+            Log.d(LOG_TAG, "onServiceResolved: SELF")
+            return
+        }
+        //resolver.resolve(serviceInfo)
+
         nsdManager.resolveService(serviceInfo, resolveListener)
+    }
+
+    private fun initClient(addr: InetSocketAddress) {
+        client.addClient(addr)
     }
 }

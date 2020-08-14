@@ -33,11 +33,7 @@ class ResolveListener(private val chanelController: ChanelController) : NsdManag
 
     override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
         Log.i(LOG_TAG, ": onServiceResolved: $serviceInfo");
-        // check for self add to list
-        if (serviceInfo.serviceName == chanelController.currentServiceName) {
-            Log.d("ResolveListener", "onServiceResolved: SELF")
-            return
-        }
+
         //TODO add to list
         val addr = InetSocketAddress(serviceInfo.host, serviceInfo.port)
         Log.d("ResolveListener", "onServiceResolved: $addr")
