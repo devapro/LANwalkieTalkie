@@ -5,6 +5,7 @@ import android.net.nsd.NsdServiceInfo
 import android.os.Build
 import android.util.Log
 import pro.devapp.walkietalkiek.ChanelController
+import timber.log.Timber
 import java.lang.String
 import java.net.InetSocketAddress
 import java.net.SocketAddress
@@ -38,9 +39,8 @@ class RegistrationListener(private val chanelController: ChanelController) :
     }
 
     override fun onServiceRegistered(serviceInfo: NsdServiceInfo) {
-        Log.i(
-            "RegistrationListener",
-            ": onServiceRegistered: $serviceInfo"
+        Timber.i(
+            "onServiceRegistered: $serviceInfo"
         )
         //TODO check duplicate registration
         // after we can start connect to other services found
@@ -49,8 +49,9 @@ class RegistrationListener(private val chanelController: ChanelController) :
 
         //  chanelController.acceptConnection()
 
-   //     handleConnection(serviceInfo.port)
+        //     handleConnection(serviceInfo.port)
         //  handlerConnectionSocket()
+        chanelController.onServiceRegister()
     }
 
     private fun handlerConnectionSocket() {

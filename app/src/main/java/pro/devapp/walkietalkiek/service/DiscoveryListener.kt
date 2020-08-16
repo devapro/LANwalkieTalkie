@@ -3,8 +3,8 @@ package pro.devapp.walkietalkiek.service
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Base64
-import android.util.Log
 import pro.devapp.walkietalkiek.ChanelController
+import timber.log.Timber
 
 class DiscoveryListener(private val chanelController: ChanelController) :
     NsdManager.DiscoveryListener {
@@ -12,30 +12,27 @@ class DiscoveryListener(private val chanelController: ChanelController) :
         try {
             val ss = serviceInfo.serviceName.split(":").toTypedArray()
             val channelName = String(Base64.decode(ss[0], 0))
-            Log.i(
-                "DiscoveryListener",
-                "onServiceFound: $channelName: $serviceInfo"
-            )
-            chanelController.resolveService(serviceInfo)
-        } catch (ex: IllegalArgumentException) {
-            Log.w("DiscoveryListener", ex.toString())
+            Timber.i("onServiceFound: $channelName: $serviceInfo")
+            chanelController.onServiceFound(serviceInfo)
+        } catch (e: IllegalArgumentException) {
+            Timber.w(e)
         }
     }
 
     override fun onStopDiscoveryFailed(serviceType: String?, errorCode: Int) {
-        Log.e("DiscoveryListener", "Stop discovery failed: $errorCode")
+        Timber.i("Stop discovery failed: $errorCode")
     }
 
     override fun onStartDiscoveryFailed(serviceType: String?, errorCode: Int) {
-        Log.e("DiscoveryListener", "Start discovery failed: $errorCode")
+        Timber.i("Start discovery failed: $errorCode")
     }
 
     override fun onDiscoveryStarted(serviceType: String?) {
-        Log.i("DiscoveryListener", "Discovery started")
+        Timber.i("Discovery started")
     }
 
     override fun onDiscoveryStopped(serviceType: String?) {
-        Log.i("DiscoveryListener", "Discovery stopped")
+        Timber.i("Discovery stopped")
     }
 
     override fun onServiceLost(serviceInfo: NsdServiceInfo) {
@@ -44,12 +41,10 @@ class DiscoveryListener(private val chanelController: ChanelController) :
                 serviceInfo.serviceName.split(":")
                     .toTypedArray()
             val channelName = String(Base64.decode(ss[0], 0))
-            Log.i(
-                "DiscoveryListener",
-                "onServiceLost: $channelName: $serviceInfo"
-            )
-        } catch (ex: IllegalArgumentException) {
-            Log.w("DiscoveryListener", ex.toString())
+            Timber.i("onServiceLost: $channelName: $serviceInfo")
+            chanelController.onServiceLost(serviceInfo)
+        } catch (e: IllegalArgumentException) {
+            Timber.w(e)
         }
     }
 }
