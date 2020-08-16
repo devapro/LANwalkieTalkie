@@ -49,6 +49,7 @@ class ChanelController(
         }
         executor.shutdown()
         client.stop()
+        server.stop()
     }
 
     fun onServiceRegister() {

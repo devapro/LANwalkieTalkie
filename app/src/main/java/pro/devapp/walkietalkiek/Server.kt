@@ -46,15 +46,15 @@ class Server {
                     }
 
                     when {
-//                        key.isConnectable -> {
-//                            // Finish connection in case of an error
-//                            val ssc = key.channel() as SocketChannel
-//                            val host = ssc.socket().inetAddress.hostName
-//                            Timber.i("isConnectable $host")
+                        key.isConnectable -> {
+                            // Finish connection in case of an error
+                            val ssc = key.channel() as SocketChannel
+                            val host = ssc.socket().inetAddress.hostName
+                            Timber.i("isConnectable $host")
 //                            if (ssc.isConnectionPending) {
 //                                ssc.finishConnect()
 //                            }
-//                        }
+                        }
                         key.isAcceptable -> {
                             val ssc = key.channel() as ServerSocketChannel
                             val newClient = ssc.accept()
@@ -66,26 +66,12 @@ class Server {
                                 Timber.i("isAcceptable $host")
                             }
                         }
-//                        key.isReadable -> {
-//                            val ssc = key.channel() as SocketChannel
-//                            val host = ssc.socket().inetAddress.hostName
-//                            try {
-//                                val readCount = ssc.read(buffer)
-//                                buffer.flip()
-//    //                        if (readCount == -1) {
-//    //                            key.channel().close()
-//    //                            key.cancel()
-//    //                            continue
-//    //                        }
-//                                if (readCount > 0) {
-//                                    Timber.i("new message $host")
-//                                    read(buffer.array(), readCount)
-//                                }
-//                            } catch (e: Exception){
-//                                Timber.w(e)
-//                            }
-//                            key.interestOps(SelectionKey.OP_WRITE)
-//                        }
+                        key.isReadable -> {
+                            val ssc = key.channel() as SocketChannel
+                            val host = ssc.socket().inetAddress.hostName
+                            Timber.i("isReadable $host")
+                            key.interestOps(SelectionKey.OP_WRITE)
+                        }
                         key.isWritable -> {
                             val sc = key.channel() as SocketChannel
                             if (sc.isConnectionPending || !sc.isConnected) {
@@ -102,28 +88,9 @@ class Server {
                                     sc.close()
                                 }
                             }
-//                        if(outputQueue.isEmpty()){
-//                            key.interestOps(SelectionKey.OP_READ)
-//                        } else {
-//                            key.interestOps(SelectionKey.OP_WRITE)
-//                        }
-
-//                        if (outputQueue.isEmpty() && sc.isOpen && sc.isConnected) {
-//                            buffer.clear()
-//                            try {
-//                                val readCount = sc.read(buffer)
-//                                buffer.flip()
-//                                if (readCount > 0) {
-//                                    read(buffer.array(), readCount)
-//                                }
-//                            } catch (e: Exception){
-//
-//                            }
-//                            buffer.clear()
-//                        }
                         }
                         else -> {
-                            // key.interestOps(SelectionKey.OP_WRITE)
+                            key.interestOps(SelectionKey.OP_WRITE)
                         }
                     }
                 }
@@ -138,15 +105,5 @@ class Server {
 
     fun sendMessage(byteBuffer: ByteBuffer) {
         outputQueue.add(byteBuffer)
-    }
-
-    private fun read(byteArray: ByteArray, readCount: Int) {
-        executorService.execute {
-            val rspData = ByteArray(readCount)
-            System.arraycopy(byteArray, 0, rspData, 0, readCount)
-            Timber.i("message: ${String(rspData).trim()}")
-            //TODO
-            //  sendMessage(ByteBuffer.wrap("received".toByteArray()))
-        }
     }
 }
