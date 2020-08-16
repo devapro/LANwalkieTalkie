@@ -10,6 +10,7 @@ import pro.devapp.walkietalkiek.VoiceRecorder
 import pro.devapp.walkietalkiek.WalkieTalkieApp
 import pro.devapp.walkietalkiek.service.WalkieService
 import java.nio.ByteBuffer
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         startService(serviceIntent)
 
         send.setOnClickListener {
-            (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test".toByteArray()))
+            (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
         }
 
         voiceRecorder = VoiceRecorder() {

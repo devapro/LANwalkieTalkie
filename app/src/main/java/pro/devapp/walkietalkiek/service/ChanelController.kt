@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Base64
+import pro.devapp.walkietalkiek.VoicePlayer
 import pro.devapp.walkietalkiek.data.DeviceInfoRepository
 import timber.log.Timber
 import java.nio.ByteBuffer
@@ -22,7 +23,10 @@ class ChanelController(
 
     private val executor = Executors.newCachedThreadPool()
 
-    private val client = Client()
+    private val voicePlayer = VoicePlayer()
+    private val client = Client() {
+        voicePlayer.play(it)
+    }
     private val server = Server()
 
     private val resolver =
@@ -39,6 +43,8 @@ class ChanelController(
             val port = server.initServer()
             registerService(port)
         }
+        voicePlayer.create()
+        voicePlayer.startPlay()
     }
 
     fun stopDiscovery() {
@@ -49,6 +55,7 @@ class ChanelController(
         executor.shutdown()
         client.stop()
         server.stop()
+        voicePlayer.stopPlay()
     }
 
     fun onServiceRegister() {

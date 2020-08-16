@@ -7,7 +7,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.util.concurrent.Executors
 
-class Client {
+class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceReader = Executors.newFixedThreadPool(1)
     private val sockets = HashMap<String, SocketChannel>()
@@ -75,7 +75,12 @@ class Client {
         executorServiceReader.execute {
             val rspData = ByteArray(readCount)
             System.arraycopy(byteArray, 0, rspData, 0, readCount)
-            Timber.i("message: ${String(rspData).trim()}")
+            if (readCount > 20) {
+                receiverListener(rspData)
+                Timber.i("message: audio")
+            } else {
+                Timber.i("message: ${String(rspData).trim()}")
+            }
         }
     }
 
