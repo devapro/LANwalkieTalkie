@@ -23,7 +23,7 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
             executorService.execute() {
                 val socketChannel = SocketChannel.open(addr)
                 sockets.put(nsdServiceInfo.serviceName, socketChannel)
-                val buffer = ByteBuffer.allocate(256)
+                val buffer = ByteBuffer.allocate(8192)
                 //TODO need synchronization
                 while (sockets[nsdServiceInfo.serviceName] != null) {
                     try {
