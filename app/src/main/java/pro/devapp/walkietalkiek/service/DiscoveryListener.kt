@@ -3,7 +3,6 @@ package pro.devapp.walkietalkiek.service
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Base64
-import pro.devapp.walkietalkiek.ChanelController
 import timber.log.Timber
 
 class DiscoveryListener(private val chanelController: ChanelController) :

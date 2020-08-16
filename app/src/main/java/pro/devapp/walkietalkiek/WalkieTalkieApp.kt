@@ -2,6 +2,7 @@ package pro.devapp.walkietalkiek
 
 import android.app.Application
 import pro.devapp.walkietalkiek.data.DeviceInfoRepository
+import pro.devapp.walkietalkiek.service.ChanelController
 import timber.log.Timber
 import timber.log.Timber.DebugTree
 
@@ -17,6 +18,9 @@ class WalkieTalkieApp : Application() {
             //Timber.plant(CrashReportingTree())
         }
         deviceInfoRepository = DeviceInfoRepository(applicationContext)
-        chanelController = ChanelController(applicationContext, deviceInfoRepository)
+        chanelController = ChanelController(
+            applicationContext,
+            deviceInfoRepository
+        )
     }
 }

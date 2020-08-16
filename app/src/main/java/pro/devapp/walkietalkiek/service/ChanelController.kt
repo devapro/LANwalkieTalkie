@@ -1,12 +1,10 @@
-package pro.devapp.walkietalkiek
+package pro.devapp.walkietalkiek.service
 
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Base64
 import pro.devapp.walkietalkiek.data.DeviceInfoRepository
-import pro.devapp.walkietalkiek.service.DiscoveryListener
-import pro.devapp.walkietalkiek.service.RegistrationListener
 import timber.log.Timber
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
@@ -27,9 +25,10 @@ class ChanelController(
     private val client = Client()
     private val server = Server()
 
-    private val resolver = Resolver(nsdManager) { addr, nsdServiceInfo ->
-        client.addClient(addr, nsdServiceInfo)
-    }
+    private val resolver =
+        Resolver(nsdManager) { addr, nsdServiceInfo ->
+            client.addClient(addr, nsdServiceInfo)
+        }
 
     companion object {
         const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */ /* WiFi Walkie Talkie */
@@ -73,7 +72,8 @@ class ChanelController(
                 Base64.NO_PADDING or Base64.NO_WRAP
             )
             val serviceName = "$encodedName:$deviceId:"
-            serviceInfo.serviceType = SERVICE_TYPE
+            serviceInfo.serviceType =
+                SERVICE_TYPE
             serviceInfo.serviceName = serviceName
             currentServiceName = serviceName
             serviceInfo.port = port

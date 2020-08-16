@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek
+package pro.devapp.walkietalkiek.old
 
 import android.util.Log
 import java.net.InetSocketAddress

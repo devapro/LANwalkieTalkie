@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek
+package pro.devapp.walkietalkiek.service
 
 import android.net.nsd.NsdServiceInfo
 import timber.log.Timber

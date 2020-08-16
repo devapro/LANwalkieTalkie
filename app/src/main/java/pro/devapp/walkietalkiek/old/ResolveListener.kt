@@ -1,9 +1,9 @@
-package pro.devapp.walkietalkiek.service
+package pro.devapp.walkietalkiek.old
 
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
-import pro.devapp.walkietalkiek.ChanelController
+import pro.devapp.walkietalkiek.service.ChanelController
 import java.lang.String
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
