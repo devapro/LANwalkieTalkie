@@ -8,13 +8,9 @@ import java.nio.channels.SocketChannel
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 
-class Clients {
+class Client {
     private val executorService = Executors.newCachedThreadPool()
     private val sockets = HashMap<String, SocketChannel>()
-
-    companion object {
-        const val LOG_TAG = "Clients"
-    }
 
     /**
      * Data for sending
@@ -34,6 +30,7 @@ class Clients {
                 sockets.put(nsdServiceInfo.serviceName, socketChannel)
                 val buffer = ByteBuffer.allocate(256)
                 //   val buffer = ByteBuffer.wrap(String("test").bytes)
+                //TODO need synchronization
                 while (sockets[nsdServiceInfo.serviceName] != null) {
                     try {
                         if (socketChannel.isConnected) {

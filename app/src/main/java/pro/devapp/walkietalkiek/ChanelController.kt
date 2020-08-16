@@ -8,14 +8,8 @@ import pro.devapp.walkietalkiek.data.DeviceInfoRepository
 import pro.devapp.walkietalkiek.service.DiscoveryListener
 import pro.devapp.walkietalkiek.service.RegistrationListener
 import timber.log.Timber
-import java.net.InetSocketAddress
 import java.nio.ByteBuffer
-import java.nio.channels.SelectionKey
-import java.nio.channels.ServerSocketChannel
-import java.nio.channels.SocketChannel
-import java.nio.channels.spi.SelectorProvider
 import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingDeque
 
 
 class ChanelController(
@@ -26,22 +20,16 @@ class ChanelController(
     private val discoveryListener = DiscoveryListener(this)
     private val registrationListener = RegistrationListener(this)
 
-    var serverSocketChannel: ServerSocketChannel? = null
-
     private var currentServiceName: String? = null
 
     private val executor = Executors.newCachedThreadPool()
 
-    private val client = Clients()
+    private val client = Client()
+    private val server = Server()
 
     private val resolver = Resolver(nsdManager) { addr, nsdServiceInfo ->
         client.addClient(addr, nsdServiceInfo)
     }
-
-    /**
-     * Data for sending
-     */
-    private val outputQueue = LinkedBlockingDeque<ByteBuffer>()
 
     companion object {
         const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */ /* WiFi Walkie Talkie */
@@ -49,8 +37,8 @@ class ChanelController(
 
     fun startDiscovery() {
         nsdManager.apply {
-            initServer()
-            registerService()
+            val port = server.initServer()
+            registerService(port)
         }
     }
 
@@ -68,133 +56,10 @@ class ChanelController(
     }
 
     fun sendMessage(byteBuffer: ByteBuffer) {
-        outputQueue.add(byteBuffer)
+        server.sendMessage(byteBuffer)
     }
 
-    private fun initServer() {
-        Timber.i("initServer")
-        val selector = SelectorProvider.provider().openSelector()
-        serverSocketChannel = ServerSocketChannel.open()
-        // https://stackoverflow.com/questions/16825403/android-serversocketchannel-binding-to-loopback-address
-        val address = InetSocketAddress(6543)
-        val socket = serverSocketChannel?.socket()
-        //  socket?.reuseAddress = true
-        socket?.bind(address)
-        serverSocketChannel?.configureBlocking(false)
-        val selectKy = serverSocketChannel?.register(
-            selector,
-            serverSocketChannel!!.validOps(),
-            null
-        )//SelectionKey.OP_ACCEPT
-        val buffer = ByteBuffer.allocate(socket?.receiveBufferSize ?: 256)
-        executor.execute() {
-            while (true) {
-                selector.select()
-                val it = selector.selectedKeys().iterator()
-                while (it.hasNext()) {
-                    val key = it.next()
-                    it.remove();
-                    if (!key.isValid) {
-                        continue;
-                    }
-
-                    when {
-//                        key.isConnectable -> {
-//                            // Finish connection in case of an error
-//                            val ssc = key.channel() as SocketChannel
-//                            val host = ssc.socket().inetAddress.hostName
-//                            Timber.i("isConnectable $host")
-//                            if (ssc.isConnectionPending) {
-//                                ssc.finishConnect()
-//                            }
-//                        }
-                        key.isAcceptable -> {
-                            val ssc = key.channel() as ServerSocketChannel
-                            val newClient = ssc.accept()
-                            val host = newClient.socket().inetAddress.hostName
-                            Timber.i("isAcceptable $host")
-                            newClient?.apply {
-                                configureBlocking(false)
-                                register(selector, SelectionKey.OP_WRITE)
-                                Timber.i("isAcceptable $host")
-                            }
-                        }
-//                        key.isReadable -> {
-//                            val ssc = key.channel() as SocketChannel
-//                            val host = ssc.socket().inetAddress.hostName
-//                            try {
-//                                val readCount = ssc.read(buffer)
-//                                buffer.flip()
-//    //                        if (readCount == -1) {
-//    //                            key.channel().close()
-//    //                            key.cancel()
-//    //                            continue
-//    //                        }
-//                                if (readCount > 0) {
-//                                    Timber.i("new message $host")
-//                                    read(buffer.array(), readCount)
-//                                }
-//                            } catch (e: Exception){
-//                                Timber.w(e)
-//                            }
-//                            key.interestOps(SelectionKey.OP_WRITE)
-//                        }
-                        key.isWritable -> {
-                            val sc = key.channel() as SocketChannel
-                            if (sc.isConnectionPending || !sc.isConnected) {
-                                sc.finishConnect()
-                            } else if (outputQueue.isNotEmpty()) {
-                                try {
-                                    val buf =
-                                        outputQueue.pollFirst() //ByteBuffer.wrap("test".toByteArray());
-                                    sc.write(buf)
-                                    Timber.i("send: ${buf?.array()?.size}")
-                                } catch (e: Exception) {
-                                    Timber.w(e)
-                                    sc.finishConnect()
-                                    sc.close()
-                                }
-                            }
-//                        if(outputQueue.isEmpty()){
-//                            key.interestOps(SelectionKey.OP_READ)
-//                        } else {
-//                            key.interestOps(SelectionKey.OP_WRITE)
-//                        }
-
-//                        if (outputQueue.isEmpty() && sc.isOpen && sc.isConnected) {
-//                            buffer.clear()
-//                            try {
-//                                val readCount = sc.read(buffer)
-//                                buffer.flip()
-//                                if (readCount > 0) {
-//                                    read(buffer.array(), readCount)
-//                                }
-//                            } catch (e: Exception){
-//
-//                            }
-//                            buffer.clear()
-//                        }
-                        }
-                        else -> {
-                            // key.interestOps(SelectionKey.OP_WRITE)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun read(byteArray: ByteArray, readCount: Int) {
-        executor.execute {
-            val rspData = ByteArray(readCount)
-            System.arraycopy(byteArray, 0, rspData, 0, readCount)
-            Timber.i("message: ${String(rspData).trim()}")
-            //TODO
-            //  sendMessage(ByteBuffer.wrap("received".toByteArray()))
-        }
-    }
-
-    private fun registerService() {
+    private fun registerService(port: Int) {
         Timber.i("registerService")
         val result = deviceInfoRepository.getCurrentDeviceInfo()
         result.getOrNull()?.apply {
@@ -210,7 +75,7 @@ class ChanelController(
             serviceInfo.serviceType = SERVICE_TYPE
             serviceInfo.serviceName = serviceName
             currentServiceName = serviceName
-            serviceInfo.port = serverSocketChannel?.socket()?.localPort ?: 6543
+            serviceInfo.port = port
             Timber.i("try register $name: $serviceInfo")
             nsdManager.registerService(
                 serviceInfo,

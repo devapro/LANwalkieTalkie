@@ -7,12 +7,10 @@ import android.util.Log
 import pro.devapp.walkietalkiek.ChanelController
 import timber.log.Timber
 import java.lang.String
-import java.net.InetSocketAddress
 import java.net.SocketAddress
 import java.nio.ByteBuffer
-import java.nio.channels.*
-import java.nio.channels.spi.SelectorProvider
-import java.util.concurrent.Executors
+import java.nio.channels.DatagramChannel
+import java.nio.channels.SelectionKey
 
 
 class RegistrationListener(private val chanelController: ChanelController) :
@@ -54,102 +52,7 @@ class RegistrationListener(private val chanelController: ChanelController) :
         chanelController.onServiceRegister()
     }
 
-    private fun handlerConnectionSocket() {
-        val selector = SelectorProvider.provider().openSelector()
-        chanelController.serverSocketChannel?.register(selector, SelectionKey.OP_ACCEPT)
-        val executor = Executors.newCachedThreadPool()
-        executor.execute() {
-            selector.selectNow()
-            val it = selector.selectedKeys().iterator()
-            while (it.hasNext()) {
-                val key = it.next()
-                it.remove();
-                if (!key.isValid()) {
-                    continue;
-                }
 
-                // Finish connection in case of an error
-                if (key.isConnectable()) {
-                    val ssc = key.channel() as SocketChannel
-                    if (ssc.isConnectionPending()) {
-                        ssc.finishConnect()
-                    }
-                }
-
-                if (key.isAcceptable()) {
-                    val ssc =
-                        key.channel() as ServerSocketChannel
-                    val newClient = ssc.accept()
-                    newClient.configureBlocking(false)
-                    newClient.register(selector, SelectionKey.OP_READ)
-                    // sockets.add(newClient)
-                    println("new client: " + newClient.socket().inetAddress.hostAddress)
-                }
-
-                if (key.isReadable()) {
-                    val sc =
-                        key.channel() as SocketChannel
-                    val data = ByteBuffer.allocate(sc.socket().sendBufferSize)
-                    println("new message: " + sc.socket().inetAddress.hostAddress)
-                    if (sc.read(data) === -1) {
-                        continue
-                    }
-                    data.flip()
-                    println("message: $data")
-                    sc.close()
-                }
-
-                if (key.isWritable) {
-                    val sc = key.channel() as SocketChannel
-                    val buf = ByteBuffer.wrap("test".toByteArray());
-                    sc.write(buf);
-
-                    println("send: test")
-                    sc.close()
-
-                    //key.interestOps(SelectionKey.OP_READ)
-                }
-            }
-        }
-
-    }
-
-    private fun handleConnection(port: Int) {
-        val selector = Selector.open();
-        val datagramChannel = DatagramChannel.open()
-        datagramChannel.configureBlocking(false)
-        datagramChannel.socket().setReuseAddress(true)
-        datagramChannel.register(selector, SelectionKey.OP_READ)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            datagramChannel.bind(InetSocketAddress(port))
-        }
-
-        val executor = Executors.newCachedThreadPool()
-        executor.execute() {
-            while (selector.isOpen) {
-                selector.selectNow()
-                val keys = selector.selectedKeys().iterator()
-                while (keys.hasNext()) {
-                    val key = keys.next();
-
-                    try {
-                        if (key.isReadable()) {
-                            handleRead(key);
-                        }
-
-                        if (key.isValid() && key.isWritable()) {
-                            handleWrite(key);
-                        }
-
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-
-                    keys.remove();
-                }
-            }
-        }
-    }
 
     private val byteBuffer: ByteBuffer = ByteBuffer.allocate(256)
     private var from: SocketAddress? = null
