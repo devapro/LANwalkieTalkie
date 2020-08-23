@@ -7,9 +7,9 @@ import android.util.Base64
 import pro.devapp.walkietalkiek.VoicePlayer
 import pro.devapp.walkietalkiek.data.DeviceInfoRepository
 import timber.log.Timber
+import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
-
 
 class ChanelController(
     context: Context,
@@ -27,11 +27,16 @@ class ChanelController(
     private val client = Client() {
         voicePlayer.play(it)
     }
-    private val server = Server()
+    private val server = Server(object : Server.ConnectionListener {
+        override fun onNewClient(address: InetSocketAddress) {
+            // try connect to new client
+            client.addClient(address)
+        }
+    })
 
     private val resolver =
         Resolver(nsdManager) { addr, nsdServiceInfo ->
-            client.addClient(addr, nsdServiceInfo)
+            client.addClient(addr)
         }
 
     companion object {
@@ -102,6 +107,10 @@ class ChanelController(
         // check for self add to list
         if (serviceInfo.serviceName == currentServiceName) {
             Timber.i("onServiceFound: SELF")
+            return
+        }
+        if (currentServiceName.isNullOrEmpty()) {
+            Timber.i("onServiceFound: NAME NOT SET")
             return
         }
         resolver.resolve(serviceInfo)

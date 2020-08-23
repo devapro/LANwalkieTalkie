@@ -62,10 +62,11 @@ class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
                 audioRecord?.apply {
                     //TODO
                     val readCount = read(bytes, 0, readBufferSize)
-                    val rspData = ByteArray(readCount)
-                    System.arraycopy(bytes, 0, rspData, 0, readCount)
-                    recordListener(bytes)
-                    Timber.i("read : $readCount")
+                    if (readCount > 0) {
+                        val rspData = ByteArray(readCount)
+                        System.arraycopy(bytes, 0, rspData, 0, readCount)
+                        recordListener(bytes)
+                    }
                 }
             }
         }

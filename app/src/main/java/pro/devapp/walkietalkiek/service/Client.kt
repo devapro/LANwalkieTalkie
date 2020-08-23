@@ -6,60 +6,129 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingDeque
 
 class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceReader = Executors.newFixedThreadPool(1)
-    private val sockets = HashMap<String, SocketChannel>()
+    private val sockets = HashMap<String, Connection>()
+    private val queueForDisconnecting = LinkedBlockingDeque<Connection>()
+    private val lock = Object()
+    private val lockCloseConnection = Object()
 
-    fun addClient(addr: InetSocketAddress, nsdServiceInfo: NsdServiceInfo) {
-        Timber.i("addClient ${addr.hostName}")
-        synchronized(this) {
-            if (sockets[nsdServiceInfo.serviceName]?.isConnected == true) {
-                Timber.i("exist ${addr.hostName}")
-                return@synchronized
+    fun addClient(addr: InetSocketAddress) {
+        Timber.i("addClient ${addr.address.hostAddress}")
+        synchronized(lock) {
+            if (sockets[addr.address.hostAddress] != null) {
+                Timber.i("exist ${addr.address.hostAddress}")
+                // test connection - try send data if connection exist
+                try {
+                    sockets[addr.address.hostAddress]?.socketChannel?.write(ByteBuffer.wrap("ping".toByteArray()))
+                    return@synchronized
+                } catch (e: Exception) {
+                    try {
+                        sockets[addr.address.hostAddress]?.socketChannel?.finishConnect()
+                        sockets[addr.address.hostAddress]?.socketChannel?.close()
+                    } catch (e: Exception) {
+                        Timber.w(e)
+                    }
+                    Timber.w(e)
+                }
             }
-            Timber.i("added ${addr.hostName}")
-            executorService.execute() {
-                val socketChannel = SocketChannel.open(addr)
-                sockets.put(nsdServiceInfo.serviceName, socketChannel)
-                val buffer = ByteBuffer.allocate(8192)
-                //TODO need synchronization
-                while (sockets[nsdServiceInfo.serviceName] != null) {
+            Timber.i("added ${addr.address.hostAddress}")
+            executorService.submit() {
+                try {
+                    val socketChannel = SocketChannel.open(addr)
+                    //TODO select options
+                    socketChannel.configureBlocking(false)
+                    socketChannel.socket().keepAlive = true
+                    socketChannel.socket().receiveBufferSize = 8192 * 4
+                    sockets[addr.address.hostAddress] = Connection(socketChannel, false)
+                    startReading(addr.address.hostAddress)
+                } catch (e: Exception) {
+                    Timber.w(addr.address.hostAddress)
+                    Timber.w(e)
+                }
+            }
+        }
+    }
+
+    private fun startReading(serviceName: String) {
+        Timber.i("startReading $serviceName")
+        //TODO set correct buffer size
+        val buffer = ByteBuffer.allocate(8192 * 8)
+        do {
+            val connection = sockets[serviceName]
+            connection?.apply {
+                if (!isPendingRemove) {
                     try {
                         if (socketChannel.isConnected) {
                             val readCount = socketChannel.read(buffer)
                             if (readCount > 0) {
                                 buffer.flip()
                                 read(buffer.array(), readCount)
+                                buffer.compact()
                             }
-                            buffer.clear()
                         } else {
-                            socketChannel.close()
-                            break
+                            Timber.i("socket chanel not connected")
+                            isPendingRemove = true
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
-                        socketChannel.close()
+                        Timber.w(e)
+                        isPendingRemove = !socketChannel.isConnected
+                    } finally {
                         buffer.clear()
-                        break
                     }
                 }
-
             }
+        } while (connection != null && !connection.isPendingRemove)
+        Timber.i("read data stop")
+        val connection = sockets[serviceName]
+        connection?.apply {
+            synchronized(lock) {
+                if (sockets[serviceName]?.isPendingRemove == true) {
+                    sockets.remove(serviceName)
+                }
+            }
+            queueForDisconnecting.add(this)
+        }
+        Timber.i("endReading $serviceName")
+        closePendingConnections()
+    }
+
+    private fun closePendingConnections() {
+        synchronized(lockCloseConnection) {
+            do {
+                val connection = queueForDisconnecting.pollFirst()
+                connection?.apply {
+                    Timber.i("close ${socketChannel.socket().inetAddress.hostName}")
+                    socketChannel.finishConnect()
+                    socketChannel.close()
+                }
+            } while (queueForDisconnecting.isNotEmpty())
         }
     }
 
     fun removeClient(nsdServiceInfo: NsdServiceInfo) {
-        Timber.i("removeClient ${nsdServiceInfo.serviceName}")
-        synchronized(this) {
+        synchronized(lock) {
             try {
                 sockets[nsdServiceInfo.serviceName]?.apply {
                     Timber.i("removeClient ${nsdServiceInfo.serviceName}")
-                    finishConnect()
-                    close()
-                    sockets.remove(nsdServiceInfo.serviceName)
+                    try {
+                        socketChannel.write(ByteBuffer.wrap("ping".toByteArray()))
+                    } catch (e: Exception) {
+                        Timber.w(e)
+                        isPendingRemove = true
+                        sockets[nsdServiceInfo.serviceName] = this
+                        synchronized(lock) {
+                            if (sockets[nsdServiceInfo.serviceName]?.isPendingRemove == true) {
+                                sockets.remove(nsdServiceInfo.serviceName)
+                            }
+                        }
+                        queueForDisconnecting.add(this)
+                    }
                 }
+                closePendingConnections()
             } catch (e: Exception) {
                 Timber.w(e)
             }
@@ -67,12 +136,13 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
     }
 
     fun stop() {
+        Timber.i("stop")
         executorService.shutdown()
         executorServiceReader.shutdown()
     }
 
     private fun read(byteArray: ByteArray, readCount: Int) {
-        executorServiceReader.execute {
+        executorServiceReader.submit {
             val rspData = ByteArray(readCount)
             System.arraycopy(byteArray, 0, rspData, 0, readCount)
             if (readCount > 20) {
@@ -83,5 +153,7 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
             }
         }
     }
+
+    data class Connection(val socketChannel: SocketChannel, var isPendingRemove: Boolean)
 
 }

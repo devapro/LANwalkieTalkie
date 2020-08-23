@@ -10,7 +10,7 @@ import java.nio.channels.spi.SelectorProvider
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 
-class Server {
+class Server(private val connectionListener: ConnectionListener) {
     private val executorService = Executors.newCachedThreadPool()
 
     /**
@@ -38,7 +38,9 @@ class Server {
             while (true) {
                 selector.select()
                 val it = selector.selectedKeys().iterator()
+                var connectionCount = selector.selectedKeys().size
                 while (it.hasNext()) {
+                    connectionCount--
                     val key = it.next()
                     it.remove();
                     if (!key.isValid) {
@@ -58,12 +60,19 @@ class Server {
                         key.isAcceptable -> {
                             val ssc = key.channel() as ServerSocketChannel
                             val newClient = ssc.accept()
-                            val host = newClient.socket().inetAddress.hostName
-                            Timber.i("isAcceptable $host")
                             newClient.apply {
                                 configureBlocking(false)
+                                //TODO ???
+                                socket().sendBufferSize = 8192
                                 register(selector, SelectionKey.OP_WRITE)
+                                val host = newClient.socket().inetAddress.hostAddress
                                 Timber.i("isAcceptable $host")
+                                connectionListener.onNewClient(
+                                    InetSocketAddress(
+                                        host,
+                                        socket().port
+                                    )
+                                )
                             }
                         }
                         key.isReadable -> {
@@ -78,10 +87,15 @@ class Server {
                                 sc.finishConnect()
                             } else if (outputQueue.isNotEmpty()) {
                                 try {
-                                    val buf =
-                                        outputQueue.pollFirst() //ByteBuffer.wrap("test".toByteArray());
-                                    sc.write(buf)
-                                    Timber.i("send: ${buf?.array()?.size}")
+                                    //important create copy!
+                                    val buf = ByteBuffer.wrap(outputQueue.first.array());
+                                    if (connectionCount == 0) {
+                                        outputQueue.pollFirst()
+                                    }
+                                    while (buf.hasRemaining()) {
+                                        sc.write(buf)
+                                    }
+                                    Timber.i("send: ${buf?.array()?.size} to ${sc.socket().inetAddress.hostName}")
                                 } catch (e: Exception) {
                                     Timber.w(e)
                                     sc.finishConnect()
@@ -105,5 +119,9 @@ class Server {
 
     fun sendMessage(byteBuffer: ByteBuffer) {
         outputQueue.add(byteBuffer)
+    }
+
+    interface ConnectionListener {
+        fun onNewClient(address: InetSocketAddress)
     }
 }

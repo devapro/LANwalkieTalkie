@@ -27,6 +27,11 @@ class MainActivity : AppCompatActivity() {
         val serviceIntent = Intent(this, WalkieService::class.java)
         startService(serviceIntent)
 
+        exit.setOnClickListener {
+            stopService(serviceIntent)
+            finish()
+        }
+
         send.setOnClickListener {
             (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
         }
