@@ -20,8 +20,10 @@ class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
             Timber.i("minRate: $it")
             val frameSize =
                 it * (java.lang.Short.SIZE / java.lang.Byte.SIZE) / 2 and Int.MAX_VALUE - 1
-            val bufferSize = (frameSize * 4)
-            // readBufferSize = bufferSize
+            var bufferSize = (frameSize * 4)
+            val minBufferSize = getMinBufferSize(it)
+            if (bufferSize < minBufferSize) bufferSize = minBufferSize
+            Timber.i("internal audio buffer size: $bufferSize")
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
                 it,
@@ -56,28 +58,24 @@ class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
 
     private fun startReading() {
         Timber.i("startReading")
-        val bytes = ByteArray(readBufferSize)
         executorService.execute {
             while (audioRecord?.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
                 audioRecord?.apply {
-                    //TODO
+                    val bytes = ByteArray(readBufferSize)
                     val readCount = read(bytes, 0, readBufferSize)
                     if (readCount > 0) {
-                        val rspData = ByteArray(readCount)
-                        System.arraycopy(bytes, 0, rspData, 0, readCount)
                         recordListener(bytes)
                     }
+                    Timber.i("read $readCount")
                 }
             }
         }
     }
 
     private fun getMinRate(): Int? {
-        val rates = arrayOf(11025, 16000, 22050, 44100)
+        val rates = arrayOf(8000, 11025, 16000, 22050, 44100)
         rates.forEach {
-            val minBufferSize = AudioRecord.getMinBufferSize(
-                it, channelConfig, AudioFormat.ENCODING_PCM_16BIT
-            )
+            val minBufferSize = getMinBufferSize(it)
             if (minBufferSize != AudioRecord.ERROR &&
                 minBufferSize != AudioRecord.ERROR_BAD_VALUE
             ) {
@@ -85,5 +83,11 @@ class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
             }
         }
         return null
+    }
+
+    private fun getMinBufferSize(rate: Int): Int {
+        return AudioRecord.getMinBufferSize(
+            rate, channelConfig, AudioFormat.ENCODING_PCM_16BIT
+        )
     }
 }

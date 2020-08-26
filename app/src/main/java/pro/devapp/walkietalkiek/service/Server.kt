@@ -30,15 +30,18 @@ class Server(private val connectionListener: ConnectionListener) {
         serverSocketChannel?.configureBlocking(false)
         val selectKy = serverSocketChannel?.register(
             selector,
-            serverSocketChannel!!.validOps(),
+            serverSocketChannel.validOps(),
             null
         )//SelectionKey.OP_ACCEPT
-        val buffer = ByteBuffer.allocate(socket?.receiveBufferSize ?: 256)
         executorService.execute() {
             while (true) {
                 selector.select()
                 val it = selector.selectedKeys().iterator()
                 var connectionCount = selector.selectedKeys().size
+
+                val f = outputQueue.pollFirst()
+                val buf = f?.run { ByteBuffer.wrap(array()) }
+                buf?.let { Timber.i("wait to send ${buf.array()[0]}") }
                 while (it.hasNext()) {
                     connectionCount--
                     val key = it.next()
@@ -63,7 +66,7 @@ class Server(private val connectionListener: ConnectionListener) {
                             newClient.apply {
                                 configureBlocking(false)
                                 //TODO ???
-                                socket().sendBufferSize = 8192
+                                socket().sendBufferSize = 8192 * 2
                                 register(selector, SelectionKey.OP_WRITE)
                                 val host = newClient.socket().inetAddress.hostAddress
                                 Timber.i("isAcceptable $host")
@@ -85,17 +88,12 @@ class Server(private val connectionListener: ConnectionListener) {
                             val sc = key.channel() as SocketChannel
                             if (sc.isConnectionPending || !sc.isConnected) {
                                 sc.finishConnect()
-                            } else if (outputQueue.isNotEmpty()) {
+                            } else if (buf != null) {
                                 try {
-                                    //important create copy!
-                                    val buf = ByteBuffer.wrap(outputQueue.first.array());
-                                    if (connectionCount == 0) {
-                                        outputQueue.pollFirst()
-                                    }
                                     while (buf.hasRemaining()) {
                                         sc.write(buf)
                                     }
-                                    Timber.i("send: ${buf?.array()?.size} to ${sc.socket().inetAddress.hostName}")
+                                    Timber.i("send: ${buf.array().size} to ${sc.socket().inetAddress.hostName}")
                                 } catch (e: Exception) {
                                     Timber.w(e)
                                     sc.finishConnect()

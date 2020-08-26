@@ -15,6 +15,7 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
     private val queueForDisconnecting = LinkedBlockingDeque<Connection>()
     private val lock = Object()
     private val lockCloseConnection = Object()
+    private val lockRead = Object()
 
     fun addClient(addr: InetSocketAddress) {
         Timber.i("addClient ${addr.address.hostAddress}")
@@ -69,6 +70,8 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
                                 read(buffer.array(), readCount)
                                 buffer.compact()
                             }
+                            java.util.Arrays.fill(buffer.array(), 0)
+                            buffer.clear()
                         } else {
                             Timber.i("socket chanel not connected")
                             isPendingRemove = true
@@ -76,8 +79,6 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
                     } catch (e: Exception) {
                         Timber.w(e)
                         isPendingRemove = !socketChannel.isConnected
-                    } finally {
-                        buffer.clear()
                     }
                 }
             }
@@ -142,15 +143,15 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
     }
 
     private fun read(byteArray: ByteArray, readCount: Int) {
-        executorServiceReader.submit {
+        if (readCount > 20) {
+            synchronized(lockRead) {
+                receiverListener(byteArray)
+            }
+            Timber.i("message: audio $readCount")
+        } else {
             val rspData = ByteArray(readCount)
             System.arraycopy(byteArray, 0, rspData, 0, readCount)
-            if (readCount > 20) {
-                receiverListener(rspData)
-                Timber.i("message: audio")
-            } else {
-                Timber.i("message: ${String(rspData).trim()}")
-            }
+            Timber.i("message: ${String(rspData).trim()}")
         }
     }
 

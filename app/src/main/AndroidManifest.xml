@@ -27,7 +27,8 @@
         </activity>
         <service
             android:name=".service.WalkieService"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
     </application>
 
 </manifest>
