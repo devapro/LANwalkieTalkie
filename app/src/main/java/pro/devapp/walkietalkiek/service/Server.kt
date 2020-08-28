@@ -11,6 +11,11 @@ import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 
 class Server(private val connectionListener: ConnectionListener) {
+
+    companion object {
+        const val SERVER_PORT = 6543
+    }
+
     private val executorService = Executors.newCachedThreadPool()
 
     /**
@@ -23,7 +28,7 @@ class Server(private val connectionListener: ConnectionListener) {
         val selector = SelectorProvider.provider().openSelector()
         val serverSocketChannel = ServerSocketChannel.open()
         // https://stackoverflow.com/questions/16825403/android-serversocketchannel-binding-to-loopback-address
-        val address = InetSocketAddress(6543)
+        val address = InetSocketAddress(SERVER_PORT)
         val socket = serverSocketChannel?.socket()
         //  socket?.reuseAddress = true
         socket?.bind(address)

@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class Resolver(
     private val nsdManager: NsdManager,
-    private val resultListener: (addr: InetSocketAddress, nsdServiceInfo: NsdServiceInfo) -> Unit
+    private val resultListener: (socketAddress: InetSocketAddress, nsdServiceInfo: NsdServiceInfo) -> Unit
 ) {
     private val servicesResolverQueue = LinkedBlockingDeque<NsdServiceInfo>()
     private val isResolverInProgress = AtomicInteger(0)
@@ -36,10 +36,10 @@ class Resolver(
 
                     override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
                         isResolverInProgress.set(0)
-                        val addr = InetSocketAddress(serviceInfo.host, serviceInfo.port)
-                        Timber.i("onServiceResolved: $addr")
-                        if (!addr.address.isMulticastAddress) {
-                            resultListener(addr, serviceInfo)
+                        val socketAddress = InetSocketAddress(serviceInfo.host, serviceInfo.port)
+                        Timber.i("onServiceResolved: $socketAddress")
+                        if (!socketAddress.address.isMulticastAddress) {
+                            resultListener(socketAddress, serviceInfo)
                         }
                         resolveNext()
                     }

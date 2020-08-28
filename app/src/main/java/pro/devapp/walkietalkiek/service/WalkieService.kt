@@ -11,10 +11,6 @@ class WalkieService : Service() {
         return null
     }
 
-    override fun onUnbind(intent: Intent?): Boolean {
-        return super.onUnbind(intent)
-    }
-
     override fun onCreate() {
         super.onCreate()
         (application as WalkieTalkieApp).chanelController.startDiscovery()

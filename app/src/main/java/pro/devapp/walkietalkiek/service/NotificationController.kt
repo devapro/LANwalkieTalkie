@@ -9,7 +9,6 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import pro.devapp.walkietalkiek.R
-import pro.devapp.walkietalkiek.WalkieTalkieApp
 import pro.devapp.walkietalkiek.ui.MainActivity
 
 class NotificationController(private val context: Context) {
@@ -17,6 +16,7 @@ class NotificationController(private val context: Context) {
     companion object {
         const val NOTIFICATION_ID = 233
         const val CHANNEL_ID = "WalkieService"
+        const val CHANEL_NAME = "WalkieTalkie"
     }
 
     fun createNotification(): Notification {
@@ -30,7 +30,7 @@ class NotificationController(private val context: Context) {
 
         val builder = NotificationCompat.Builder(context)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            builder.setChannelId(WalkieTalkieApp.CHANNEL_ID)
+            builder.setChannelId(CHANNEL_ID)
         }
         return builder.setContentTitle(context.resources.getString(R.string.app_name))
 //            .setContentText(timeStr)
@@ -52,7 +52,7 @@ class NotificationController(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(
                 CHANNEL_ID,
-                "WalkieTalkie",
+                CHANEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             )
             notificationChannel.setSound(null, null)

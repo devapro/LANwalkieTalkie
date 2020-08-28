@@ -12,10 +12,6 @@ class WalkieTalkieApp : Application() {
     lateinit var deviceInfoRepository: DeviceInfoRepository
     lateinit var notificationController: NotificationController
 
-    companion object {
-        const val CHANNEL_ID = "WalkieService"
-    }
-
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) {

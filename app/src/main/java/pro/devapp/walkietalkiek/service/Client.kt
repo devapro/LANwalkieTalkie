@@ -17,37 +17,41 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
     private val lockCloseConnection = Object()
     private val lockRead = Object()
 
-    fun addClient(addr: InetSocketAddress) {
-        Timber.i("addClient ${addr.address.hostAddress}")
+    fun addClient(socketAddress: InetSocketAddress) {
+        Timber.i("addClient ${socketAddress.address.hostAddress}")
         synchronized(lock) {
-            if (sockets[addr.address.hostAddress] != null) {
-                Timber.i("exist ${addr.address.hostAddress}")
+            if (sockets[socketAddress.address.hostAddress] != null) {
+                Timber.i("exist ${socketAddress.address.hostAddress}")
                 // test connection - try send data if connection exist
                 try {
-                    sockets[addr.address.hostAddress]?.socketChannel?.write(ByteBuffer.wrap("ping".toByteArray()))
+                    sockets[socketAddress.address.hostAddress]?.socketChannel?.write(
+                        ByteBuffer.wrap(
+                            "ping".toByteArray()
+                        )
+                    )
                     return@synchronized
                 } catch (e: Exception) {
                     try {
-                        sockets[addr.address.hostAddress]?.socketChannel?.finishConnect()
-                        sockets[addr.address.hostAddress]?.socketChannel?.close()
+                        sockets[socketAddress.address.hostAddress]?.socketChannel?.finishConnect()
+                        sockets[socketAddress.address.hostAddress]?.socketChannel?.close()
                     } catch (e: Exception) {
                         Timber.w(e)
                     }
                     Timber.w(e)
                 }
             }
-            Timber.i("added ${addr.address.hostAddress}")
+            Timber.i("added ${socketAddress.address.hostAddress}")
             executorService.submit() {
                 try {
-                    val socketChannel = SocketChannel.open(addr)
+                    val socketChannel = SocketChannel.open(socketAddress)
                     //TODO select options
                     socketChannel.configureBlocking(false)
                     socketChannel.socket().keepAlive = true
                     socketChannel.socket().receiveBufferSize = 8192 * 4
-                    sockets[addr.address.hostAddress] = Connection(socketChannel, false)
-                    startReading(addr.address.hostAddress)
+                    sockets[socketAddress.address.hostAddress] = Connection(socketChannel, false)
+                    startReading(socketAddress.address.hostAddress)
                 } catch (e: Exception) {
-                    Timber.w(addr.address.hostAddress)
+                    Timber.w(socketAddress.address.hostAddress)
                     Timber.w(e)
                 }
             }
