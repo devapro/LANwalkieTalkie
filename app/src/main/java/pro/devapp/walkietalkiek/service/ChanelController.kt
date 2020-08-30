@@ -24,10 +24,10 @@ class ChanelController(
     private val executor = Executors.newCachedThreadPool()
 
     private val voicePlayer = VoicePlayer()
-    private val client = Client() {
+    private val client = SocketClient() {
         voicePlayer.play(it)
     }
-    private val server = Server(object : Server.ConnectionListener {
+    private val server = SocketServer(object : IServer.ConnectionListener {
         override fun onNewClient(address: InetSocketAddress) {
             // try connect to new client
             client.addClient(address)

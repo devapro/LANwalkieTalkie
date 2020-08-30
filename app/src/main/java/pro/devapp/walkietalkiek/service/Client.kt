@@ -5,56 +5,64 @@ import timber.log.Timber
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
+import kotlin.collections.HashMap
 
-class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
+class Client(private val receiverListener: (bytes: ByteArray) -> Unit) : IClient {
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceReader = Executors.newFixedThreadPool(1)
-    private val sockets = HashMap<String, Connection>()
-    private val queueForDisconnecting = LinkedBlockingDeque<Connection>()
+    private val sockets = HashMap<String, IClient.Connection>()
+    private val queueForDisconnecting = LinkedBlockingDeque<IClient.Connection>()
     private val lock = Object()
     private val lockCloseConnection = Object()
     private val lockRead = Object()
 
-    fun addClient(socketAddress: InetSocketAddress) {
+    override fun addClient(socketAddress: InetSocketAddress) {
         Timber.i("addClient ${socketAddress.address.hostAddress}")
         synchronized(lock) {
             if (sockets[socketAddress.address.hostAddress] != null) {
                 Timber.i("exist ${socketAddress.address.hostAddress}")
+                return
                 // test connection - try send data if connection exist
-                try {
-                    sockets[socketAddress.address.hostAddress]?.socketChannel?.write(
-                        ByteBuffer.wrap(
-                            "ping".toByteArray()
-                        )
-                    )
-                    return@synchronized
-                } catch (e: Exception) {
-                    try {
-                        sockets[socketAddress.address.hostAddress]?.socketChannel?.finishConnect()
-                        sockets[socketAddress.address.hostAddress]?.socketChannel?.close()
-                    } catch (e: Exception) {
-                        Timber.w(e)
-                    }
-                    Timber.w(e)
-                }
+//                try {
+//                    sockets[socketAddress.address.hostAddress]?.socketChannel?.write(
+//                        ByteBuffer.wrap(
+//                            "ping".toByteArray()
+//                        )
+//                    )
+//                    return@synchronized
+//                } catch (e: Exception) {
+//                    try {
+//                        sockets[socketAddress.address.hostAddress]?.socketChannel?.finishConnect()
+//                        sockets[socketAddress.address.hostAddress]?.socketChannel?.close()
+//                    } catch (e: Exception) {
+//                        Timber.w(e)
+//                    }
+//                    Timber.w(e)
+//                }
+
             }
-            Timber.i("added ${socketAddress.address.hostAddress}")
+            Timber.i("try add ${socketAddress.address.hostAddress}")
             executorService.submit() {
                 try {
                     val socketChannel = SocketChannel.open(socketAddress)
                     //TODO select options
                     socketChannel.configureBlocking(false)
-                    socketChannel.socket().keepAlive = true
+                    // socketChannel.socket().keepAlive = true
                     socketChannel.socket().receiveBufferSize = 8192 * 4
-                    sockets[socketAddress.address.hostAddress] = Connection(socketChannel, false)
+                    sockets[socketAddress.address.hostAddress] =
+                        IClient.Connection(socketChannel, false)
+                    Timber.i("added1 ${socketAddress.address.hostAddress}")
                     startReading(socketAddress.address.hostAddress)
+
                 } catch (e: Exception) {
                     Timber.w(socketAddress.address.hostAddress)
                     Timber.w(e)
                 }
             }
+            Timber.i("added2 ${socketAddress.address.hostAddress}")
         }
     }
 
@@ -62,6 +70,7 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
         Timber.i("startReading $serviceName")
         //TODO set correct buffer size
         val buffer = ByteBuffer.allocate(8192 * 8)
+        var lastPingAt = Date().time
         do {
             val connection = sockets[serviceName]
             connection?.apply {
@@ -71,8 +80,17 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
                             val readCount = socketChannel.read(buffer)
                             if (readCount > 0) {
                                 buffer.flip()
-                                read(buffer.array(), readCount)
+                                read(buffer.array(), readCount, serviceName)
                                 buffer.compact()
+                            } else if (readCount < 0) {
+                                isPendingRemove = true
+                            } else {
+                                val currentTime = Date().time
+                                if (currentTime - lastPingAt > 10000) {
+                                    socketChannel.write(ByteBuffer.wrap("ping".toByteArray()))
+                                    lastPingAt = currentTime
+                                    Timber.i("sent ping to $serviceName")
+                                }
                             }
                             java.util.Arrays.fill(buffer.array(), 0)
                             buffer.clear()
@@ -114,7 +132,7 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
         }
     }
 
-    fun removeClient(nsdServiceInfo: NsdServiceInfo) {
+    override fun removeClient(nsdServiceInfo: NsdServiceInfo) {
         synchronized(lock) {
             try {
                 sockets[nsdServiceInfo.serviceName]?.apply {
@@ -140,13 +158,13 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
         }
     }
 
-    fun stop() {
+    override fun stop() {
         Timber.i("stop")
         executorService.shutdown()
         executorServiceReader.shutdown()
     }
 
-    private fun read(byteArray: ByteArray, readCount: Int) {
+    private fun read(byteArray: ByteArray, readCount: Int, serviceName: String) {
         if (readCount > 20) {
             synchronized(lockRead) {
                 receiverListener(byteArray)
@@ -155,10 +173,8 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) {
         } else {
             val rspData = ByteArray(readCount)
             System.arraycopy(byteArray, 0, rspData, 0, readCount)
-            Timber.i("message: ${String(rspData).trim()}")
+            Timber.i("message: ${String(rspData).trim()} from $serviceName")
         }
     }
-
-    data class Connection(val socketChannel: SocketChannel, var isPendingRemove: Boolean)
 
 }
