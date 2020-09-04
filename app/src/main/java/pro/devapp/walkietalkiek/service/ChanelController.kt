@@ -31,7 +31,7 @@ class ChanelController(
     private val server = SocketServer(object : IServer.ConnectionListener {
         override fun onClientConnected(address: InetSocketAddress) {
             // try connect to new client
-            //client.addClient(address)
+            client.addClient(address, false)
         }
 
         override fun onClientDisconnected(address: InetSocketAddress) {

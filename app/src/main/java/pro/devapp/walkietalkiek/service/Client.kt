@@ -18,7 +18,7 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) : IClient
     private val lockCloseConnection = Object()
     private val lockRead = Object()
 
-    override fun addClient(socketAddress: InetSocketAddress) {
+    override fun addClient(socketAddress: InetSocketAddress, ignoreExist: Boolean) {
         Timber.i("addClient ${socketAddress.address.hostAddress}")
         synchronized(lock) {
             if (sockets[socketAddress.address.hostAddress] != null) {

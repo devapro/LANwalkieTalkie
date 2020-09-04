@@ -14,7 +14,7 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
     private val lockRead = Object()
     private val lock = Object()
 
-    override fun addClient(socketAddress: InetSocketAddress) {
+    override fun addClient(socketAddress: InetSocketAddress, ignoreExist: Boolean) {
         executorService.execute {
             // check connection
 //            if (sockets[socketAddress.address.hostAddress] != null) {
@@ -31,13 +31,13 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
 //                close()
 //                sockets.remove(socketAddress.address.hostAddress)
 //            }
-            //sockets[socketAddress.address.hostAddress] == null
-            if (true) {
+            //
+            if (sockets[socketAddress.address.hostAddress] == null || ignoreExist) {
                 try {
                     val socket = Socket(socketAddress.address.hostAddress, socketAddress.port)
                     sockets[socketAddress.address.hostAddress] = socket
                     val dataInput = DataInputStream(socket.getInputStream())
-                    val byteArray = ByteArray(8192 * 8)
+                    val byteArray = ByteArray(8192 * 2)
                     Timber.i("Started reading ${socketAddress.address.hostAddress}")
                     try {
                         while (socket.isConnected && !socket.isInputShutdown) {
@@ -62,9 +62,14 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
 
     override fun removeClient(hostAddress: String) {
         sockets[hostAddress]?.apply {
+            val socketAddress = InetSocketAddress(
+                hostAddress,
+                port
+            )
             close()
             sockets.remove(hostAddress)
             Timber.i("removeClient $hostAddress")
+            addClient(socketAddress)
         }
     }
 
@@ -75,7 +80,7 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
 
     private fun checkConnection(hostAddress: String) {
         val outputStream = DataOutputStream(sockets[hostAddress]!!.getOutputStream())
-        outputStream.write("ping".toByteArray())
+        outputStream.write("pong".toByteArray())
     }
 
     private fun handleConnection(hostAddress: String) {
@@ -94,7 +99,7 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
         }
     }
 
-    private fun read(byteArray: ByteArray, readCount: Int, serviceName: String) {
+    private fun read(byteArray: ByteArray, readCount: Int, hostAddress: String) {
         val rspData = ByteArray(readCount)
         System.arraycopy(byteArray, 0, rspData, 0, readCount)
         if (readCount > 20) {
@@ -103,7 +108,11 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
             }
             Timber.i("message: audio $readCount")
         } else {
-            Timber.i("message: ${String(rspData).trim()} from $serviceName")
+            val message = String(rspData).trim()
+            Timber.i("message: $message from $hostAddress")
+            if (message == "ping") {
+                checkConnection(hostAddress)
+            }
         }
     }
 }

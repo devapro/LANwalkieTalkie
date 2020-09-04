@@ -1,6 +1,7 @@
 package pro.devapp.walkietalkiek.service
 
 import timber.log.Timber
+import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -68,12 +69,28 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
                             outputQueueMap.remove(client.inetAddress.hostAddress)
                         }
                     }
+
+                    executorService.execute {
+                        val dataInput = DataInputStream(client.getInputStream())
+                        val byteArray = ByteArray(8192 * 2)
+                        try {
+                            while (client.isConnected && !client.isInputShutdown) {
+                                val readCount = dataInput.read(byteArray)
+                                if (readCount > 0) {
+                                    read(byteArray, readCount, client.inetAddress.hostAddress)
+                                }
+                                java.util.Arrays.fill(byteArray, 0)
+                            }
+                        } catch (e: Exception) {
+                            Timber.w(e)
+                        }
+                    }
                 } catch (e: Exception) {
                     Timber.w(e)
                 }
             }
         }
-        pingExecutor.scheduleWithFixedDelay({ ping() }, 1000, 2000, TimeUnit.MILLISECONDS)
+        pingExecutor.scheduleWithFixedDelay({ ping() }, 1000, 5000, TimeUnit.MILLISECONDS)
         return SERVER_PORT
     }
 
@@ -92,5 +109,12 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
         outputQueueMap.forEach { item ->
             item.value.add(byteBuffer)
         }
+    }
+
+    private fun read(byteArray: ByteArray, readCount: Int, hostAddress: String) {
+        val rspData = ByteArray(readCount)
+        System.arraycopy(byteArray, 0, rspData, 0, readCount)
+        val message = String(rspData).trim()
+        Timber.i("message: $message from $hostAddress")
     }
 }
