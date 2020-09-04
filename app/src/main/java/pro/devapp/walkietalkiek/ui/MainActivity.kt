@@ -8,6 +8,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.VoiceRecorder
 import pro.devapp.walkietalkiek.WalkieTalkieApp
+import pro.devapp.walkietalkiek.service.SocketClient
 import pro.devapp.walkietalkiek.service.WalkieService
 import pro.devapp.walkietalkiek.utils.permission.Permission
 import pro.devapp.walkietalkiek.utils.permission.UtilPermission
@@ -36,6 +37,10 @@ class MainActivity : AppCompatActivity() {
             (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
         }
 
+    }
+
+    override fun onStart() {
+        super.onStart()
         utilPermission.checkOrRequestPermissions(this, object : UtilPermission.PermissionCallback(
             arrayOf(Permission.AUDIO_RECORD)
         ) {
@@ -43,7 +48,29 @@ class MainActivity : AppCompatActivity() {
                 startVoiceRecorder()
             }
         })
+        (application as WalkieTalkieApp).chanelController.actionListener =
+            object : SocketClient.ActionListener {
+                override fun onClientListUpdated(clients: List<String>) {
+                    clientsView.post {
+                        clientsView.text = clients.size.toString()
+                    }
+                }
 
+                override fun onClientSendMessage(client: String) {
+                    activeClient.post {
+                        activeClient.text = client
+                    }
+                    activeClient.postDelayed({
+                        activeClient.text = "---"
+                    }, 1000)
+                }
+            }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        voiceRecorder.destroy()
+        (application as WalkieTalkieApp).chanelController.actionListener = null
     }
 
     override fun onDestroy() {

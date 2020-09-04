@@ -46,6 +46,12 @@ class ChanelController(
             client.addClient(addr)
         }
 
+    var actionListener: SocketClient.ActionListener? = null
+        set(value) {
+            field = value
+            client.actionListener = value
+        }
+
     companion object {
         const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */
     }
