@@ -87,7 +87,7 @@ class Server(private val connectionListener: IServer.ConnectionListener) : IServ
                                 register(selector, SelectionKey.OP_WRITE)
                                 val hostAddress = newClient.socket().inetAddress.hostAddress
                                 Timber.i("isAcceptable $hostAddress")
-                                connectionListener.onNewClient(
+                                connectionListener.onClientConnected(
                                     InetSocketAddress(
                                         hostAddress,
                                         socket().port

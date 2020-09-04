@@ -8,6 +8,7 @@ import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.TimeUnit
 
 class SocketServer(private val connectionListener: IServer.ConnectionListener) : IServer {
     companion object {
@@ -15,6 +16,7 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
     }
 
     private val executorService = Executors.newCachedThreadPool()
+    private val pingExecutor = Executors.newScheduledThreadPool(1)
 
     /**
      * Data for sending
@@ -28,7 +30,7 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
                 try {
                     val client = socket.accept()
                     client.sendBufferSize = 8192
-                    connectionListener.onNewClient(
+                    connectionListener.onClientConnected(
                         InetSocketAddress(
                             client.inetAddress.hostAddress,
                             client.port
@@ -38,16 +40,31 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
                     executorService.execute {
                         val outputStream = DataOutputStream(client.getOutputStream())
                         try {
+                            var errorCounter = 0
                             while (client.isConnected) {
-                                if (outputQueueMap[client.inetAddress.hostAddress]?.isNotEmpty() == true) {
-                                    val buf =
-                                        outputQueueMap[client.inetAddress.hostAddress]?.pollFirst()
-                                    buf?.let { outputStream.write(it.array()) }
+                                try {
+                                    if (outputQueueMap[client.inetAddress.hostAddress]?.isNotEmpty() == true) {
+                                        val buf =
+                                            outputQueueMap[client.inetAddress.hostAddress]?.pollFirst()
+                                        buf?.let { outputStream.write(it.array()) }
+                                        errorCounter = 0
+                                    }
+                                } catch (e: Exception) {
+                                    errorCounter++
+                                    if (errorCounter > 3) {
+                                        throw e
+                                    }
                                 }
                             }
                         } catch (e: Exception) {
                             Timber.w(e)
                         } finally {
+                            connectionListener.onClientDisconnected(
+                                InetSocketAddress(
+                                    client.inetAddress.hostAddress,
+                                    client.port
+                                )
+                            )
                             outputQueueMap.remove(client.inetAddress.hostAddress)
                         }
                     }
@@ -56,11 +73,19 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
                 }
             }
         }
+        pingExecutor.scheduleWithFixedDelay({ ping() }, 1000, 2000, TimeUnit.MILLISECONDS)
         return SERVER_PORT
+    }
+
+    private fun ping() {
+        outputQueueMap.forEach { item ->
+            item.value.add(ByteBuffer.wrap("ping".toByteArray()))
+        }
     }
 
     override fun stop() {
         executorService.shutdown()
+        pingExecutor.shutdown()
     }
 
     override fun sendMessage(byteBuffer: ByteBuffer) {

@@ -29,14 +29,19 @@ class ChanelController(
         voicePlayer.play(it)
     }
     private val server = SocketServer(object : IServer.ConnectionListener {
-        override fun onNewClient(address: InetSocketAddress) {
+        override fun onClientConnected(address: InetSocketAddress) {
             // try connect to new client
-            client.addClient(address)
+            //client.addClient(address)
+        }
+
+        override fun onClientDisconnected(address: InetSocketAddress) {
+            client.removeClient(address.address.hostAddress)
         }
     })
 
     private val resolver =
         Resolver(nsdManager) { addr, nsdServiceInfo ->
+            Timber.i("Resolve: ${nsdServiceInfo.serviceName}")
             resolvedNamesCache[nsdServiceInfo.serviceName] = addr.address.hostAddress
             client.addClient(addr)
         }
@@ -124,8 +129,8 @@ class ChanelController(
             Timber.i("onServiceLost: SELF")
             return
         }
-        resolvedNamesCache[nsdServiceInfo.serviceName]?.let {
-            client.removeClient(it)
-        }
+//        resolvedNamesCache[nsdServiceInfo.serviceName]?.let {
+//            client.removeClient(it)
+//        }
     }
 }

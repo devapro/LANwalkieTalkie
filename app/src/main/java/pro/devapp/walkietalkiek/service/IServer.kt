@@ -8,6 +8,7 @@ interface IServer {
     fun stop()
     fun sendMessage(byteBuffer: ByteBuffer)
     interface ConnectionListener {
-        fun onNewClient(address: InetSocketAddress)
+        fun onClientConnected(address: InetSocketAddress)
+        fun onClientDisconnected(address: InetSocketAddress)
     }
 }
