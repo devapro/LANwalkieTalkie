@@ -57,12 +57,14 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onClientSendMessage(client: String) {
-                    activeClient.post {
-                        activeClient.text = client
+                    if (activeClient.text == "---") {
+                        activeClient.post {
+                            activeClient.text = client
+                        }
+                        activeClient.postDelayed({
+                            activeClient.text = "---"
+                        }, 1000)
                     }
-                    activeClient.postDelayed({
-                        activeClient.text = "---"
-                    }, 1000)
                 }
             }
     }

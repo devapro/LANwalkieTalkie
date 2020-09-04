@@ -54,7 +54,7 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
     }
 
     private fun handleConnection(client: Socket) {
-        executorService.execute {
+        executorService.submit {
             val outputStream = DataOutputStream(client.getOutputStream())
             try {
                 var errorCounter = 0
@@ -98,7 +98,9 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
 
     private fun ping() {
         outputQueueMap.forEach { item ->
-            item.value.add(ByteBuffer.wrap("ping".toByteArray()))
+            if (item.value.isEmpty()) {
+                item.value.add(ByteBuffer.wrap("ping".toByteArray()))
+            }
         }
     }
 

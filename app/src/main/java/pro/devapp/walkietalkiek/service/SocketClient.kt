@@ -5,12 +5,13 @@ import java.io.DataInputStream
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : IClient {
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceClients = Executors.newCachedThreadPool()
     private val executorServiceReader = Executors.newFixedThreadPool(1)
-    private val sockets = HashMap<String, Socket>()
+    private val sockets = HashMap<String, Connection>()
     private val lockRead = Object()
     private val lock = Object()
 
@@ -22,10 +23,14 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
                 synchronized(lock) {
                     if (sockets[socketAddress.address.hostAddress] == null || ignoreExist) {
                         try {
-                            sockets[socketAddress.address.hostAddress]?.apply { close() }
+                            sockets[socketAddress.address.hostAddress]?.apply {
+                                future?.cancel(true)
+                                socket.close()
+                                sockets.remove(socketAddress.address.hostAddress)
+                            }
                             val socket =
                                 Socket(socketAddress.address.hostAddress, socketAddress.port)
-                            sockets[socketAddress.address.hostAddress] = socket
+                            sockets[socketAddress.address.hostAddress] = Connection(socket, null)
                             actionListener?.onClientListUpdated(sockets.map { it.key }.toList())
                             handleConnection(socketAddress.address.hostAddress)
                         } catch (e: Exception) {
@@ -42,9 +47,10 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
         sockets[hostAddress]?.apply {
             val socketAddress = InetSocketAddress(
                 hostAddress,
-                port
+                socket.port
             )
-            close()
+            future?.cancel(true)
+            socket.close()
             sockets.remove(hostAddress)
             Timber.i("removeClient $hostAddress")
             actionListener?.onClientListUpdated(sockets.map { it.key }.toList())
@@ -61,20 +67,25 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
         val socket = sockets[hostAddress]
         socket?.let {
             executorServiceClients.execute {
-                val dataInput = DataInputStream(socket.getInputStream())
-                val byteArray = ByteArray(8192 * 2)
-                Timber.i("Started reading $hostAddress")
-                try {
-                    while (socket.isConnected && !socket.isInputShutdown) {
-                        val readCount = dataInput.read(byteArray)
-                        if (readCount > 0) {
-                            read(byteArray, readCount, hostAddress)
+                if (!it.socket.isClosed) {
+                    val dataInput = DataInputStream(it.socket.getInputStream())
+                    val byteArray = ByteArray(8192 * 2)
+                    Timber.i("Started reading $hostAddress")
+                    try {
+                        while (!it.socket.isClosed && !it.socket.isInputShutdown) {
+                            val readCount = dataInput.read(byteArray)
+                            if (readCount > 0) {
+                                read(byteArray, readCount, hostAddress)
+                            }
+                            java.util.Arrays.fill(byteArray, 0)
                         }
-                        java.util.Arrays.fill(byteArray, 0)
+                    } catch (e: Exception) {
+                        Timber.w(e)
+                    } finally {
+                        removeClient(hostAddress)
+                        Timber.i("remove $hostAddress")
                     }
-                } catch (e: Exception) {
-                    Timber.w(e)
-                } finally {
+                } else {
                     removeClient(hostAddress)
                     Timber.i("remove $hostAddress")
                 }
@@ -83,13 +94,13 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
     }
 
     private fun read(byteArray: ByteArray, readCount: Int, hostAddress: String) {
-        executorServiceReader.execute { actionListener?.onClientSendMessage(hostAddress) }
         val rspData = ByteArray(readCount)
         System.arraycopy(byteArray, 0, rspData, 0, readCount)
         if (readCount > 20) {
-            synchronized(lockRead) {
+            executorServiceReader.submit {
                 receiverListener(rspData)
             }
+            executorServiceReader.execute { actionListener?.onClientSendMessage(hostAddress) }
             Timber.i("message: audio $readCount")
         } else {
             val message = String(rspData).trim()
@@ -101,4 +112,9 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
         fun onClientListUpdated(clients: List<String>)
         fun onClientSendMessage(client: String)
     }
+
+    data class Connection(
+        val socket: Socket,
+        val future: Future<*>?
+    )
 }

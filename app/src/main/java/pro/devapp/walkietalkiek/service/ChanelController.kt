@@ -135,8 +135,8 @@ class ChanelController(
             Timber.i("onServiceLost: SELF")
             return
         }
-//        resolvedNamesCache[nsdServiceInfo.serviceName]?.let {
-//            client.removeClient(it)
-//        }
+        resolvedNamesCache[nsdServiceInfo.serviceName]?.let {
+            client.removeClient(it)
+        }
     }
 }
