@@ -27,22 +27,28 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
             while (true) {
                 try {
                     val client = socket.accept()
+                    client.sendBufferSize = 8192
                     connectionListener.onNewClient(
                         InetSocketAddress(
                             client.inetAddress.hostAddress,
                             client.port
                         )
                     )
-                    outputQueueMap[client.inetAddress.hostAddress] =
-                        LinkedBlockingDeque<ByteBuffer>()
+                    outputQueueMap[client.inetAddress.hostAddress] = LinkedBlockingDeque()
                     executorService.execute {
                         val outputStream = DataOutputStream(client.getOutputStream())
-                        while (client.isConnected) {
-                            if (outputQueueMap[client.inetAddress.hostAddress]?.isNotEmpty() == true) {
-                                val buf =
-                                    outputQueueMap[client.inetAddress.hostAddress]?.pollFirst()
-                                buf?.let { outputStream.write(buf?.array()) }
+                        try {
+                            while (client.isConnected) {
+                                if (outputQueueMap[client.inetAddress.hostAddress]?.isNotEmpty() == true) {
+                                    val buf =
+                                        outputQueueMap[client.inetAddress.hostAddress]?.pollFirst()
+                                    buf?.let { outputStream.write(it.array()) }
+                                }
                             }
+                        } catch (e: Exception) {
+                            Timber.w(e)
+                        } finally {
+                            outputQueueMap.remove(client.inetAddress.hostAddress)
                         }
                     }
                 } catch (e: Exception) {

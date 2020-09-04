@@ -1,6 +1,5 @@
 package pro.devapp.walkietalkiek.service
 
-import android.net.nsd.NsdServiceInfo
 import timber.log.Timber
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
@@ -64,6 +63,10 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) : IClient
             }
             Timber.i("added2 ${socketAddress.address.hostAddress}")
         }
+    }
+
+    override fun removeClient(hostAddress: String) {
+
     }
 
     private fun startReading(serviceName: String) {
@@ -132,31 +135,31 @@ class Client(private val receiverListener: (bytes: ByteArray) -> Unit) : IClient
         }
     }
 
-    override fun removeClient(nsdServiceInfo: NsdServiceInfo) {
-        synchronized(lock) {
-            try {
-                sockets[nsdServiceInfo.serviceName]?.apply {
-                    Timber.i("removeClient ${nsdServiceInfo.serviceName}")
-                    try {
-                        socketChannel.write(ByteBuffer.wrap("ping".toByteArray()))
-                    } catch (e: Exception) {
-                        Timber.w(e)
-                        isPendingRemove = true
-                        sockets[nsdServiceInfo.serviceName] = this
-                        synchronized(lock) {
-                            if (sockets[nsdServiceInfo.serviceName]?.isPendingRemove == true) {
-                                sockets.remove(nsdServiceInfo.serviceName)
-                            }
-                        }
-                        queueForDisconnecting.add(this)
-                    }
-                }
-                closePendingConnections()
-            } catch (e: Exception) {
-                Timber.w(e)
-            }
-        }
-    }
+//    override fun removeClient(nsdServiceInfo: NsdServiceInfo) {
+//        synchronized(lock) {
+//            try {
+//                sockets[nsdServiceInfo.serviceName]?.apply {
+//                    Timber.i("removeClient ${nsdServiceInfo.serviceName}")
+//                    try {
+//                        socketChannel.write(ByteBuffer.wrap("ping".toByteArray()))
+//                    } catch (e: Exception) {
+//                        Timber.w(e)
+//                        isPendingRemove = true
+//                        sockets[nsdServiceInfo.serviceName] = this
+//                        synchronized(lock) {
+//                            if (sockets[nsdServiceInfo.serviceName]?.isPendingRemove == true) {
+//                                sockets.remove(nsdServiceInfo.serviceName)
+//                            }
+//                        }
+//                        queueForDisconnecting.add(this)
+//                    }
+//                }
+//                closePendingConnections()
+//            } catch (e: Exception) {
+//                Timber.w(e)
+//            }
+//        }
+//    }
 
     override fun stop() {
         Timber.i("stop")

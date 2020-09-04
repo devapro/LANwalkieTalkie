@@ -18,6 +18,7 @@ class ChanelController(
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val discoveryListener = DiscoveryListener(this)
     private val registrationListener = RegistrationListener(this)
+    private val resolvedNamesCache = HashMap<String, String>()
 
     private var currentServiceName: String? = null
 
@@ -36,11 +37,12 @@ class ChanelController(
 
     private val resolver =
         Resolver(nsdManager) { addr, nsdServiceInfo ->
+            resolvedNamesCache[nsdServiceInfo.serviceName] = addr.address.hostAddress
             client.addClient(addr)
         }
 
     companion object {
-        const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */ /* WiFi Walkie Talkie */
+        const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */
     }
 
     fun startDiscovery() {
@@ -116,12 +118,14 @@ class ChanelController(
         resolver.resolve(serviceInfo)
     }
 
-    fun onServiceLost(serviceInfo: NsdServiceInfo) {
-        Timber.i("onServiceLost: $serviceInfo")
-        if (serviceInfo.serviceName == currentServiceName) {
+    fun onServiceLost(nsdServiceInfo: NsdServiceInfo) {
+        Timber.i("onServiceLost: $nsdServiceInfo")
+        if (nsdServiceInfo.serviceName == currentServiceName) {
             Timber.i("onServiceLost: SELF")
             return
         }
-        client.removeClient(serviceInfo)
+        resolvedNamesCache[nsdServiceInfo.serviceName]?.let {
+            client.removeClient(it)
+        }
     }
 }

@@ -1,6 +1,5 @@
 package pro.devapp.walkietalkiek.service
 
-import android.net.nsd.NsdServiceInfo
 import timber.log.Timber
 import java.io.DataInputStream
 import java.net.InetSocketAddress
@@ -20,23 +19,33 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
                     val socket = Socket(socketAddress.address.hostAddress, socketAddress.port)
                     sockets[socketAddress.address.hostAddress] = socket
                     val dataInput = DataInputStream(socket.getInputStream())
-                    val buffer = ByteArray(8192 * 8)
-                    while (socket.isConnected) {
-                        val readCount = dataInput.read(buffer)
+                    val byteArray = ByteArray(8192 * 8)
+                    Timber.i("Start reading ${socketAddress.address.hostAddress}")
+                    while (socket.isConnected && !socket.isInputShutdown) {
+                        val readCount = dataInput.read(byteArray)
                         if (readCount > 0) {
-                            read(buffer, readCount, socketAddress.address.hostAddress)
+                            read(byteArray, readCount, socketAddress.address.hostAddress)
                         }
+                        java.util.Arrays.fill(byteArray, 0)
                     }
                 } catch (e: Exception) {
                     Timber.w(e)
                 }
                 sockets.remove(socketAddress.address.hostAddress)
+                Timber.i("remove ${socketAddress.address.hostAddress}")
             }
         }
     }
 
-    override fun removeClient(nsdServiceInfo: NsdServiceInfo) {
-        //  sockets[nsdServiceInfo.host.hostAddress]?.apply { close() }
+    override fun removeClient(hostAddress: String) {
+        sockets[hostAddress]?.apply {
+            if (isInputShutdown || !isConnected) {
+                Timber.i("close: $hostAddress")
+                close()
+            } else {
+                Timber.i("try close, but it is connected : $hostAddress")
+            }
+        }
     }
 
     override fun stop() {
@@ -45,14 +54,14 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
     }
 
     private fun read(byteArray: ByteArray, readCount: Int, serviceName: String) {
+        val rspData = ByteArray(readCount)
+        System.arraycopy(byteArray, 0, rspData, 0, readCount)
         if (readCount > 20) {
             synchronized(lockRead) {
-                receiverListener(byteArray)
+                receiverListener(rspData)
             }
             Timber.i("message: audio $readCount")
         } else {
-            val rspData = ByteArray(readCount)
-            System.arraycopy(byteArray, 0, rspData, 0, readCount)
             Timber.i("message: ${String(rspData).trim()} from $serviceName")
         }
     }
