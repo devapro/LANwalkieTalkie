@@ -30,6 +30,7 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
                             }
                             val socket =
                                 Socket(socketAddress.address.hostAddress, socketAddress.port)
+                            socket.receiveBufferSize = 8192 * 2
                             sockets[socketAddress.address.hostAddress] = Connection(socket, null)
                             actionListener?.onClientListUpdated(sockets.map { it.key }.toList())
                             handleConnection(socketAddress.address.hostAddress)
@@ -69,7 +70,7 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
             executorServiceClients.execute {
                 if (!it.socket.isClosed) {
                     val dataInput = DataInputStream(it.socket.getInputStream())
-                    val byteArray = ByteArray(8192 * 2)
+                    val byteArray = ByteArray(8192 * 8)
                     Timber.i("Started reading $hostAddress")
                     try {
                         while (!it.socket.isClosed && !it.socket.isInputShutdown) {
@@ -105,6 +106,15 @@ class SocketClient(private val receiverListener: (bytes: ByteArray) -> Unit) : I
         } else {
             val message = String(rspData).trim()
             Timber.i("message: $message from $hostAddress")
+//            if (message == "ping"){
+//                sockets[hostAddress]?.apply {
+//                    try {
+//                        socket.getOutputStream().write("pong".toByteArray())
+//                    } catch (e: Exception){
+//                        removeClient(hostAddress)
+//                    }
+//                }
+//            }
         }
     }
 

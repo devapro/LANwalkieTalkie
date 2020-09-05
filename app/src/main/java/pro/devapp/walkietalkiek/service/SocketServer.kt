@@ -17,6 +17,7 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
     }
 
     private val executorService = Executors.newCachedThreadPool()
+    private val executorServiceRead = Executors.newCachedThreadPool()
     private val pingExecutor = Executors.newScheduledThreadPool(1)
     private val acceptConnectionExecutor = Executors.newScheduledThreadPool(1)
 
@@ -71,6 +72,7 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
                             }
                         buf?.let {
                             outputStream.write(it.array())
+                            outputStream.flush()
                             Timber.i("send data to ${client.inetAddress.hostAddress}")
                         }
                         errorCounter = 0
@@ -94,6 +96,29 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
                 outputQueueMap.remove(client.inetAddress.hostAddress)
             }
         }
+//        executorServiceRead.submit {
+//            val dataInput = DataInputStream(client.getInputStream())
+//            val byteArray = ByteArray(8192 * 8)
+//            Timber.i("Started reading ${client.inetAddress.hostAddress}")
+//            try {
+//                while (!client.isClosed && !client.isInputShutdown) {
+//                    val readCount = dataInput.read(byteArray)
+//                    if (readCount > 0) {
+//                        read(byteArray, readCount, client.inetAddress.hostAddress)
+//                    }
+//                    java.util.Arrays.fill(byteArray, 0)
+//                }
+//            } catch (e: Exception) {
+//                Timber.w(e)
+//            }
+//        }
+    }
+
+    private fun read(byteArray: ByteArray, readCount: Int, hostAddress: String) {
+        val rspData = ByteArray(readCount)
+        System.arraycopy(byteArray, 0, rspData, 0, readCount)
+        val message = String(rspData).trim()
+        Timber.i("message: $message from $hostAddress")
     }
 
     private fun ping() {
@@ -111,6 +136,7 @@ class SocketServer(private val connectionListener: IServer.ConnectionListener) :
         executorService.shutdown()
         pingExecutor.shutdown()
         acceptConnectionExecutor.shutdown()
+        executorServiceRead.shutdown()
     }
 
     override fun sendMessage(byteBuffer: ByteBuffer) {
