@@ -2,10 +2,9 @@ package pro.devapp.walkietalkiek.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
 import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.VoiceRecorder
@@ -21,7 +20,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var voiceRecorder: VoiceRecorder
 
     private val utilPermission = UtilPermission()
-    private var disposable: Disposable? = null
+    private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                 startVoiceRecorder()
             }
         })
-        disposable =
+        val disposable =
             (application as WalkieTalkieApp).connectedDevicesRepository.getConnectedDevicesList()
                 .observeOn(AndroidSchedulers.mainThread()).subscribe { list ->
 
@@ -67,12 +66,13 @@ class MainActivity : AppCompatActivity() {
                         }, 1000)
                     }
                 }
+        compositeDisposable.add(disposable)
     }
 
     override fun onStop() {
         super.onStop()
         voiceRecorder.destroy()
-        disposable?.dispose()
+        compositeDisposable.dispose()
     }
 
     override fun onDestroy() {
@@ -95,20 +95,13 @@ class MainActivity : AppCompatActivity() {
         }
         voiceRecorder.create()
 
-        talk.setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    voiceRecorder.startRecord()
-                    true
-                }
-                MotionEvent.ACTION_UP -> {
-                    voiceRecorder.stopRecord()
-                    true
-                }
-                else -> {
-                    false
-                }
+        val disposable = ppt.getPushActionSubject().subscribe {
+            if (it) {
+                voiceRecorder.startRecord()
+            } else {
+                voiceRecorder.stopRecord()
             }
         }
+        compositeDisposable.add(disposable)
     }
 }
