@@ -4,11 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
 import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.VoiceRecorder
 import pro.devapp.walkietalkiek.WalkieTalkieApp
-import pro.devapp.walkietalkiek.service.SocketClient
 import pro.devapp.walkietalkiek.service.WalkieService
 import pro.devapp.walkietalkiek.utils.permission.Permission
 import pro.devapp.walkietalkiek.utils.permission.UtilPermission
@@ -20,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var voiceRecorder: VoiceRecorder
 
     private val utilPermission = UtilPermission()
+    private var disposable: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,31 +50,46 @@ class MainActivity : AppCompatActivity() {
                 startVoiceRecorder()
             }
         })
-        (application as WalkieTalkieApp).chanelController.actionListener =
-            object : SocketClient.ActionListener {
-                override fun onClientListUpdated(clients: List<String>) {
-                    clientsView.post {
-                        clientsView.text = clients.size.toString()
-                    }
-                }
+        disposable =
+            (application as WalkieTalkieApp).connectedDevicesRepository.getConnectedDevicesList()
+                .observeOn(AndroidSchedulers.mainThread()).subscribe { list ->
+                clientsView.text = list.filter { it.isConnected }.size.toString()
 
-                override fun onClientSendMessage(client: String) {
-                    if (activeClient.text == "---") {
-                        activeClient.post {
-                            activeClient.text = client
-                        }
-                        activeClient.postDelayed({
-                            activeClient.text = "---"
-                        }, 1000)
-                    }
+                val currentDate = Date().time
+                val activeClients = list.filter { currentDate - it.lastDataReceivedAt < 1000 }
+                if (activeClients.isNotEmpty()) {
+                    activeClient.text = activeClients.joinToString(",")
+                    activeClient.postDelayed({
+                        activeClient.text = "---"
+                    }, 1000)
                 }
             }
+//        (application as WalkieTalkieApp).chanelController.actionListener =
+//            object : SocketClient.ActionListener {
+//                override fun onClientListUpdated(clients: List<String>) {
+//                    clientsView.post {
+//                        clientsView.text = clients.size.toString()
+//                    }
+//                }
+//
+//                override fun onClientSendMessage(client: String) {
+//                    if (activeClient.text == "---") {
+//                        activeClient.post {
+//                            activeClient.text = client
+//                        }
+//                        activeClient.postDelayed({
+//                            activeClient.text = "---"
+//                        }, 1000)
+//                    }
+//                }
+//            }
     }
 
     override fun onStop() {
         super.onStop()
         voiceRecorder.destroy()
-        (application as WalkieTalkieApp).chanelController.actionListener = null
+        // (application as WalkieTalkieApp).chanelController.actionListener = null
+        disposable?.dispose()
     }
 
     override fun onDestroy() {

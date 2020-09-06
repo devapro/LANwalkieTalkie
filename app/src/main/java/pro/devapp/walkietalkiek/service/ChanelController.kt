@@ -5,6 +5,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Base64
 import pro.devapp.walkietalkiek.VoicePlayer
+import pro.devapp.walkietalkiek.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.data.DeviceInfoRepository
 import timber.log.Timber
 import java.net.InetSocketAddress
@@ -13,7 +14,8 @@ import java.util.concurrent.Executors
 
 class ChanelController(
     context: Context,
-    private val deviceInfoRepository: DeviceInfoRepository
+    private val deviceInfoRepository: DeviceInfoRepository,
+    private val connectedDevicesRepository: ConnectedDevicesRepository
 ) {
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val discoveryListener = DiscoveryListener(this)
@@ -25,31 +27,46 @@ class ChanelController(
     private val executor = Executors.newCachedThreadPool()
 
     private val voicePlayer = VoicePlayer()
-    private val client = SocketClient() {
-        voicePlayer.play(it)
-    }
+    private val client = SocketClient(object : IClient.ConnectionListener {
+        override fun onClientConnect(hostAddress: String) {
+            connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
+        }
+
+        override fun onClientDisconnect(hostAddress: String) {
+            connectedDevicesRepository.setHostDisconnected(hostAddress)
+        }
+    })
     private val server = SocketServer(object : IServer.ConnectionListener {
         override fun onClientConnected(address: InetSocketAddress) {
             // try connect to new client
             client.addClient(address, false)
+            connectedDevicesRepository.addOrUpdateHostStateToConnected(address.address.hostAddress)
         }
 
         override fun onClientDisconnected(address: InetSocketAddress) {
             client.removeClient(address.address.hostAddress)
+            connectedDevicesRepository.setHostDisconnected(address.address.hostAddress)
         }
-    })
+    }) { hostAddress, data ->
+        if (data.size > 20) {
+            voicePlayer.play(data)
+            Timber.i("message: audio ${data.size}")
+        } else {
+            val message = String(data).trim()
+            Timber.i("message: $message from $hostAddress")
+        }
+        connectedDevicesRepository.storeDataReceivedTime(hostAddress)
+    }
 
     private val resolver =
-        Resolver(nsdManager) { addr, nsdServiceInfo ->
+        Resolver(nsdManager) { inetSocketAddress, nsdServiceInfo ->
             Timber.i("Resolve: ${nsdServiceInfo.serviceName}")
-            resolvedNamesCache[nsdServiceInfo.serviceName] = addr.address.hostAddress
-            client.addClient(addr)
-        }
-
-    var actionListener: SocketClient.ActionListener? = null
-        set(value) {
-            field = value
-            client.actionListener = value
+            resolvedNamesCache[nsdServiceInfo.serviceName] = inetSocketAddress.address.hostAddress
+            connectedDevicesRepository.addHostInfo(
+                inetSocketAddress.address.hostAddress,
+                nsdServiceInfo.serviceName
+            )
+            client.addClient(inetSocketAddress)
         }
 
     companion object {
@@ -81,7 +98,7 @@ class ChanelController(
     }
 
     fun sendMessage(byteBuffer: ByteBuffer) {
-        server.sendMessage(byteBuffer)
+        client.sendMessage(byteBuffer)
     }
 
     private fun registerService(port: Int) {
