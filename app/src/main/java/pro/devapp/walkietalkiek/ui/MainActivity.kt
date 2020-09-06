@@ -53,42 +53,25 @@ class MainActivity : AppCompatActivity() {
         disposable =
             (application as WalkieTalkieApp).connectedDevicesRepository.getConnectedDevicesList()
                 .observeOn(AndroidSchedulers.mainThread()).subscribe { list ->
-                clientsView.text = list.filter { it.isConnected }.size.toString()
 
-                val currentDate = Date().time
-                val activeClients = list.filter { currentDate - it.lastDataReceivedAt < 1000 }
-                if (activeClients.isNotEmpty()) {
-                    activeClient.text = activeClients.joinToString(",")
-                    activeClient.postDelayed({
-                        activeClient.text = "---"
-                    }, 1000)
+                    clientsList.setItems(list)
+
+                    clientsView.text = list.filter { it.isConnected }.size.toString()
+
+                    val currentDate = Date().time
+                    val activeClients = list.filter { currentDate - it.lastDataReceivedAt < 1000 }
+                    if (activeClients.isNotEmpty()) {
+                        activeClient.text = activeClients.joinToString(",")
+                        activeClient.postDelayed({
+                            activeClient.text = "---"
+                        }, 1000)
+                    }
                 }
-            }
-//        (application as WalkieTalkieApp).chanelController.actionListener =
-//            object : SocketClient.ActionListener {
-//                override fun onClientListUpdated(clients: List<String>) {
-//                    clientsView.post {
-//                        clientsView.text = clients.size.toString()
-//                    }
-//                }
-//
-//                override fun onClientSendMessage(client: String) {
-//                    if (activeClient.text == "---") {
-//                        activeClient.post {
-//                            activeClient.text = client
-//                        }
-//                        activeClient.postDelayed({
-//                            activeClient.text = "---"
-//                        }, 1000)
-//                    }
-//                }
-//            }
     }
 
     override fun onStop() {
         super.onStop()
         voiceRecorder.destroy()
-        // (application as WalkieTalkieApp).chanelController.actionListener = null
         disposable?.dispose()
     }
 
