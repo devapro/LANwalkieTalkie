@@ -1,6 +1,7 @@
 package pro.devapp.walkietalkiek.data
 
-import io.reactivex.subjects.PublishSubject
+import io.reactivex.subjects.ReplaySubject
+import io.reactivex.subjects.Subject
 import pro.devapp.walkietalkiek.entities.ClientEntity
 import java.util.*
 import kotlin.collections.HashMap
@@ -10,7 +11,7 @@ import kotlin.collections.HashMap
  */
 class ConnectedDevicesRepository {
     private val clients = HashMap<String, ClientEntity>()
-    private val clientsSubject = PublishSubject.create<List<ClientEntity>>()
+    private val clientsSubject = ReplaySubject.createWithSize<List<ClientEntity>>(1)
 
     private fun publishChanges() {
         val clientsList = clients.map { it.value }.toList()
@@ -54,7 +55,7 @@ class ConnectedDevicesRepository {
         publishChanges()
     }
 
-    fun getConnectedDevicesList(): PublishSubject<List<ClientEntity>> {
+    fun getConnectedDevicesList(): Subject<List<ClientEntity>> {
         return clientsSubject
     }
 }

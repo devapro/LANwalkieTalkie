@@ -30,7 +30,7 @@ class SocketClient(private val connectionListener: IClient.ConnectionListener) :
 
     override fun addClient(socketAddress: InetSocketAddress, ignoreExist: Boolean) {
         val hostAddress = socketAddress.address.hostAddress
-        if (sockets[hostAddress] == null || ignoreExist) {
+        if ((sockets[hostAddress] == null || ignoreExist) && !executorService.isShutdown) {
             executorService.execute {
                 synchronized(lock) {
                     if (sockets[hostAddress] == null || ignoreExist) {
