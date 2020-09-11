@@ -1,5 +1,6 @@
 package pro.devapp.walkietalkiek.service
 
+import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
 import java.io.DataInputStream
 import java.net.InetSocketAddress
@@ -11,7 +12,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class SocketServer(
-    private val connectionListener: IServer.ConnectionListener,
     private val receiverListener: (hostAddress: String, bytes: ByteArray) -> Unit
 ) : IServer {
     companion object {
@@ -30,6 +30,9 @@ class SocketServer(
 
     private var socket: ServerSocket? = null
 
+    val clientConnectionSubject = PublishSubject.create<InetSocketAddress>()
+    val clientDisconnectionSubject = PublishSubject.create<InetSocketAddress>()
+
     override fun initServer(): Int {
         if (socket != null && socket?.isClosed == false) {
             return SERVER_PORT
@@ -44,7 +47,7 @@ class SocketServer(
                     client.receiveBufferSize = 8192 * 2
                     client.tcpNoDelay = true
                     val hostAddress = client.inetAddress.hostAddress
-                    connectionListener.onClientConnected(
+                    clientConnectionSubject.onNext(
                         InetSocketAddress(
                             hostAddress,
                             client.port
@@ -79,7 +82,7 @@ class SocketServer(
                 Timber.w(e)
             } finally {
                 client.close()
-                connectionListener.onClientDisconnected(
+                clientDisconnectionSubject.onNext(
                     InetSocketAddress(
                         hostAddress,
                         client.port

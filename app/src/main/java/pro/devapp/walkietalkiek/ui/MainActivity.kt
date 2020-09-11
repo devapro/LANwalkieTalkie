@@ -10,6 +10,7 @@ import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.VoiceRecorder
 import pro.devapp.walkietalkiek.WalkieTalkieApp
 import pro.devapp.walkietalkiek.service.WalkieService
+import pro.devapp.walkietalkiek.ui.widgets.BottomButtons
 import pro.devapp.walkietalkiek.utils.permission.Permission
 import pro.devapp.walkietalkiek.utils.permission.UtilPermission
 import java.nio.ByteBuffer
@@ -28,20 +29,11 @@ class MainActivity : AppCompatActivity() {
 
         val serviceIntent = Intent(this, WalkieService::class.java)
         startService(serviceIntent)
-
-        exit.setOnClickListener {
-            stopService(serviceIntent)
-            finish()
-        }
-
-        send.setOnClickListener {
-            (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
-        }
-
     }
 
     override fun onStart() {
         super.onStart()
+        val serviceIntent = Intent(this, WalkieService::class.java)
         utilPermission.checkOrRequestPermissions(this, object : UtilPermission.PermissionCallback(
             arrayOf(Permission.AUDIO_RECORD)
         ) {
@@ -67,6 +59,20 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
         compositeDisposable.add(disposable)
+
+        compositeDisposable.add(bottomButtons.buttonsClickSubject.subscribe {
+            when (it) {
+                BottomButtons.Buttons.MESSAGES -> {
+                    (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
+                }
+                BottomButtons.Buttons.SETTINGS -> {
+                }
+                BottomButtons.Buttons.EXIT -> {
+                    stopService(serviceIntent)
+                    finish()
+                }
+            }
+        })
     }
 
     override fun onStop() {

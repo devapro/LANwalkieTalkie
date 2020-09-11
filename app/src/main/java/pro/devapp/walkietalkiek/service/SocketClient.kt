@@ -1,5 +1,6 @@
 package pro.devapp.walkietalkiek.service
 
+import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
 import java.io.DataOutputStream
 import java.net.InetSocketAddress
@@ -10,12 +11,15 @@ import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
-class SocketClient(private val connectionListener: IClient.ConnectionListener) : IClient {
+class SocketClient : IClient {
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceClients = Executors.newCachedThreadPool()
     private val executorServiceReader = Executors.newFixedThreadPool(1)
     private val sockets = HashMap<String, Connection>()
     private val lock = Object()
+
+    val clientConnectionSubject = PublishSubject.create<String>()
+    val clientDisconnectionSubject = PublishSubject.create<String>()
 
     /**
      * Data for sending
@@ -45,7 +49,7 @@ class SocketClient(private val connectionListener: IClient.ConnectionListener) :
                             socket.receiveBufferSize = 8192 * 2
                             sockets[hostAddress] = Connection(socket, null)
                             outputQueueMap[hostAddress] = LinkedBlockingDeque()
-                            connectionListener.onClientConnect(hostAddress)
+                            clientConnectionSubject.onNext(hostAddress)
                             handleConnection(hostAddress)
                         } catch (e: Exception) {
                             Timber.w(e)
@@ -67,7 +71,7 @@ class SocketClient(private val connectionListener: IClient.ConnectionListener) :
             socket.close()
             sockets.remove(hostAddress)
             Timber.i("removeClient $hostAddress")
-            connectionListener.onClientDisconnect(hostAddress)
+            clientDisconnectionSubject.onNext(hostAddress)
             // try reconnect
             addClient(socketAddress)
         }

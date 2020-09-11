@@ -4,6 +4,9 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Base64
+import io.reactivex.Observer
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import pro.devapp.walkietalkiek.VoicePlayer
 import pro.devapp.walkietalkiek.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.data.DeviceInfoRepository
@@ -26,28 +29,39 @@ class ChanelController(
 
     private val executor = Executors.newCachedThreadPool()
 
+    private val compositeDisposable = CompositeDisposable()
+
     private val voicePlayer = VoicePlayer()
-    private val client = SocketClient(object : IClient.ConnectionListener {
-        override fun onClientConnect(hostAddress: String) {
-            connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
-        }
 
-        override fun onClientDisconnect(hostAddress: String) {
-            connectedDevicesRepository.setHostDisconnected(hostAddress)
-        }
-    })
-    private val server = SocketServer(object : IServer.ConnectionListener {
-        override fun onClientConnected(address: InetSocketAddress) {
-            // try connect to new client
-            client.addClient(address, false)
-            connectedDevicesRepository.addOrUpdateHostStateToConnected(address.address.hostAddress)
-        }
+    private val client = SocketClient().apply {
+        clientConnectionSubject.subscribe(object : Observer<String> {
+            override fun onSubscribe(d: Disposable) {
+                compositeDisposable.add(d)
+            }
 
-        override fun onClientDisconnected(address: InetSocketAddress) {
-            client.removeClient(address.address.hostAddress)
-            connectedDevicesRepository.setHostDisconnected(address.address.hostAddress)
-        }
-    }) { hostAddress, data ->
+            override fun onNext(t: String) {
+                connectedDevicesRepository.addOrUpdateHostStateToConnected(t)
+            }
+
+            override fun onError(e: Throwable) {}
+
+            override fun onComplete() {}
+        })
+        clientDisconnectionSubject.subscribe(object : Observer<String> {
+            override fun onSubscribe(d: Disposable) {
+                compositeDisposable.add(d)
+            }
+
+            override fun onNext(t: String) {
+                connectedDevicesRepository.setHostDisconnected(t)
+            }
+
+            override fun onError(e: Throwable) {}
+
+            override fun onComplete() {}
+        })
+    }
+    private val server = SocketServer() { hostAddress, data ->
         if (data.size > 20) {
             voicePlayer.play(data)
             Timber.i("message: audio ${data.size}")
@@ -57,6 +71,38 @@ class ChanelController(
         }
         connectedDevicesRepository.storeDataReceivedTime(hostAddress)
     }
+        .apply {
+            clientConnectionSubject.subscribe(object : Observer<InetSocketAddress> {
+                override fun onSubscribe(d: Disposable) {
+                    compositeDisposable.add(d)
+                }
+
+                override fun onNext(address: InetSocketAddress) {
+                    // try connect to new client
+                    client.addClient(address, false)
+                    connectedDevicesRepository.addOrUpdateHostStateToConnected(address.address.hostAddress)
+                }
+
+                override fun onError(e: Throwable) {}
+
+                override fun onComplete() {}
+            })
+
+            clientDisconnectionSubject.subscribe(object : Observer<InetSocketAddress> {
+                override fun onSubscribe(d: Disposable) {
+                    compositeDisposable.add(d)
+                }
+
+                override fun onNext(address: InetSocketAddress) {
+                    client.removeClient(address.address.hostAddress)
+                    connectedDevicesRepository.setHostDisconnected(address.address.hostAddress)
+                }
+
+                override fun onError(e: Throwable) {}
+
+                override fun onComplete() {}
+            })
+        }
 
     private val resolver =
         Resolver(nsdManager) { inetSocketAddress, nsdServiceInfo ->
@@ -87,6 +133,7 @@ class ChanelController(
             stopServiceDiscovery(discoveryListener)
             unregisterService(registrationListener)
         }
+        compositeDisposable.dispose()
         executor.shutdown()
         client.stop()
         server.stop()
