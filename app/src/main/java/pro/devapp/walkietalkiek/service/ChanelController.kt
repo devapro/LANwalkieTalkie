@@ -175,7 +175,7 @@ class ChanelController(
                 NsdManager.PROTOCOL_DNS_SD,
                 registrationListener
             )
-            executorPing.scheduleWithFixedDelay({ ping() }, 1000, 5000, TimeUnit.MILLISECONDS)
+            executorPing.scheduleWithFixedDelay({ ping() }, 1000, 2000, TimeUnit.MILLISECONDS)
         }
         result.exceptionOrNull()?.apply {
             Timber.w(this)

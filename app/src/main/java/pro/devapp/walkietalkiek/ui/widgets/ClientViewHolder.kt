@@ -1,17 +1,14 @@
 package pro.devapp.walkietalkiek.ui.widgets
 
 import android.view.View
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.databinding.ItemClientBinding
 import pro.devapp.walkietalkiek.entities.ClientEntity
+import java.util.*
 
 class ClientViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    val viewBinding = ItemClientBinding.bind(itemView)
-    private val disconnectedStateColor =
-        ContextCompat.getColor(itemView.context, R.color.colorPrimaryDark)
-    private val connectedStateColor = ContextCompat.getColor(itemView.context, R.color.colorAccent)
+    private val viewBinding = ItemClientBinding.bind(itemView)
 
     companion object {
         const val LAYOUT_ID = R.layout.item_client
@@ -19,6 +16,17 @@ class ClientViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     fun onBind(clientEntity: ClientEntity) {
         viewBinding.name.text = clientEntity.hostAddress
-        viewBinding.status.setBackgroundColor(if (clientEntity.isConnected) connectedStateColor else disconnectedStateColor)
+        val currentDate = Date().time
+        when {
+            currentDate - clientEntity.lastDataReceivedAt < 1000 && clientEntity.isConnected -> {
+                viewBinding.status.currentStatus = StatusIndicator.STATES.STATE_ACTIVE
+            }
+            clientEntity.isConnected -> {
+                viewBinding.status.currentStatus = StatusIndicator.STATES.STATE_ONLINE
+            }
+            else -> {
+                viewBinding.status.currentStatus = StatusIndicator.STATES.STATE_OFFLINE
+            }
+        }
     }
 }

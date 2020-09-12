@@ -3,18 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="56dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="8dp">
 
     <TextView
         android:id="@+id/name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
         android:layout_gravity="start|center_vertical"
+        android:textColor="@color/colorWhite"
         tools:text="TextView" />
 
-    <View
+    <pro.devapp.walkietalkiek.ui.widgets.StatusIndicator
         android:id="@+id/status"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_gravity="end|center_vertical" />
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_gravity="start|center_vertical"
+        app:srcCompat="@drawable/status_selector" />
 </FrameLayout>

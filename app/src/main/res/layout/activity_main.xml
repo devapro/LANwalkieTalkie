@@ -38,22 +38,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/clientsList" />
 
-    <TextView
-        android:id="@+id/activeClient"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="---"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/clientsView" />
-
     <pro.devapp.walkietalkiek.ui.widgets.PPTButton
         android:id="@+id/ppt"
         android:layout_width="182dp"
         android:layout_height="182dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/activeClient" />
+        app:layout_constraintTop_toBottomOf="@+id/clientsView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
