@@ -14,6 +14,7 @@ import timber.log.Timber
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class ChanelController(
     context: Context,
@@ -28,6 +29,7 @@ class ChanelController(
     private var currentServiceName: String? = null
 
     private val executor = Executors.newCachedThreadPool()
+    private val executorPing = Executors.newSingleThreadScheduledExecutor()
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -135,6 +137,7 @@ class ChanelController(
         }
         compositeDisposable.dispose()
         executor.shutdown()
+        executorPing.shutdown()
         client.stop()
         server.stop()
         voicePlayer.stopPlay()
@@ -172,12 +175,17 @@ class ChanelController(
                 NsdManager.PROTOCOL_DNS_SD,
                 registrationListener
             )
+            executorPing.scheduleWithFixedDelay({ ping() }, 1000, 5000, TimeUnit.MILLISECONDS)
         }
         result.exceptionOrNull()?.apply {
             Timber.w(this)
         }
     }
 
+    private fun ping() {
+        server.sendMessage(ByteBuffer.wrap("ping".toByteArray()))
+        client.sendMessage(ByteBuffer.wrap("ping".toByteArray()))
+    }
 
     fun onServiceFound(serviceInfo: NsdServiceInfo) {
         Timber.i("onServiceFound: $serviceInfo")

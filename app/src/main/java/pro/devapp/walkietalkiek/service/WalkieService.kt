@@ -28,4 +28,12 @@ class WalkieService : Service() {
         super.onDestroy()
         (application as WalkieTalkieApp).chanelController.stopDiscovery()
     }
+
+    private fun setWakeLock() {
+
+    }
+
+    private fun releaseWakeLock() {
+
+    }
 }

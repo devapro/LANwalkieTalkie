@@ -2,14 +2,17 @@ package pro.devapp.walkietalkiek.service
 
 import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
+import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.ByteBuffer
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
+import kotlin.collections.HashMap
 
 class SocketClient : IClient {
     private val executorService = Executors.newCachedThreadPool()
@@ -90,6 +93,24 @@ class SocketClient : IClient {
     private fun handleConnection(hostAddress: String) {
         val socket = sockets[hostAddress]
         socket?.let {
+            val readingFuture = executorServiceClients.submit {
+                val dataInput = DataInputStream(it.socket.getInputStream())
+                val byteArray = ByteArray(8192 * 8)
+                Timber.i("Started reading $hostAddress")
+                try {
+                    while (!it.socket.isClosed && !it.socket.isInputShutdown) {
+                        val readCount = dataInput.read(byteArray)
+                        if (readCount > 0) {
+
+                        }
+                        Arrays.fill(byteArray, 0)
+                    }
+                } catch (e: Exception) {
+                    Timber.w(e)
+                } finally {
+
+                }
+            }
             executorServiceClients.execute {
                 if (!it.socket.isClosed) {
                     val outputStream = DataOutputStream(it.socket.getOutputStream())
@@ -115,6 +136,7 @@ class SocketClient : IClient {
                             } catch (e: Exception) {
                                 errorCounter++
                                 if (errorCounter > 3) {
+                                    Timber.d("errorCounter $errorCounter")
                                     throw e
                                 }
                             }
@@ -122,6 +144,7 @@ class SocketClient : IClient {
                     } catch (e: Exception) {
                         Timber.w(e)
                     } finally {
+                        readingFuture.cancel(true)
                         removeClient(hostAddress)
                         Timber.i("remove $hostAddress")
                     }
