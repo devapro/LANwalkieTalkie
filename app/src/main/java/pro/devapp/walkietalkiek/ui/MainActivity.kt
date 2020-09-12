@@ -13,7 +13,6 @@ import pro.devapp.walkietalkiek.service.WalkieService
 import pro.devapp.walkietalkiek.ui.widgets.BottomButtons
 import pro.devapp.walkietalkiek.utils.permission.Permission
 import pro.devapp.walkietalkiek.utils.permission.UtilPermission
-import timber.log.Timber
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -51,7 +50,6 @@ class MainActivity : AppCompatActivity() {
         compositeDisposable.add(disposable)
 
         compositeDisposable.add(bottomButtons.buttonsClickSubject.subscribe {
-            Timber.i(it.toString())
             when (it) {
                 BottomButtons.Buttons.MESSAGES -> {
                     (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))

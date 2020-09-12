@@ -155,9 +155,8 @@ class ChanelController(
         Timber.i("registerService")
         val result = deviceInfoRepository.getCurrentDeviceInfo()
         result.getOrNull()?.apply {
-            /* Android NSD implementation is very unstable when services
-                    * registers with the same name. Will use "CHANNEL_NAME:DEVICE_ID:".
-                    */
+            // Android NSD implementation is very unstable when services
+            // registers with the same name. Will use "CHANNEL_NAME:DEVICE_ID:".
             val serviceInfo = NsdServiceInfo()
             val encodedName = Base64.encodeToString(
                 name.toByteArray(),

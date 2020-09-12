@@ -133,9 +133,11 @@ class SocketServer(
     private fun read(byteArray: ByteArray, readCount: Int, hostAddress: String) {
         val rspData = ByteArray(readCount)
         System.arraycopy(byteArray, 0, rspData, 0, readCount)
-        executorServiceRead.submit {
-            receiverListener(hostAddress, rspData)
-        }
+        //TODO check it
+        receiverListener(hostAddress, rspData)
+//        executorServiceRead.submit {
+//            receiverListener(hostAddress, rspData)
+//        }
 
 //        if (readCount > 20) {
 //            executorServiceRead.submit {

@@ -28,7 +28,8 @@ class VoicePlayer {
                 sampleRate,
                 AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize / 4,
+                // TODO check it
+                bufferSize,
                 AudioTrack.MODE_STREAM
             ).apply {
                 play()
