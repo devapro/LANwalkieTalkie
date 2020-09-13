@@ -62,6 +62,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+
+        val ipAddress = (application as WalkieTalkieApp).deviceInfoRepository.getCurrentIp()
+        ip.text = ipAddress
     }
 
     override fun onStop() {
