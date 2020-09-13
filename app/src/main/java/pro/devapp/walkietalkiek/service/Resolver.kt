@@ -14,6 +14,7 @@ class Resolver(
     private val servicesResolverQueue = LinkedBlockingDeque<NsdServiceInfo>()
     private val isResolverInProgress = AtomicInteger(0)
 
+
     fun resolve(nsdServiceInfo: NsdServiceInfo) {
         Timber.i("resolve")
         servicesResolverQueue.add(nsdServiceInfo)

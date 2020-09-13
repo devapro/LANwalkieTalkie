@@ -5,12 +5,10 @@ import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioTrack
 import timber.log.Timber
-import java.util.concurrent.Executors
 
 class VoicePlayer {
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private var audioTrack: AudioTrack? = null
-    private val executorAudioReader = Executors.newFixedThreadPool(1)
     private var bufferSize = 0
 
     fun create() {
@@ -54,7 +52,6 @@ class VoicePlayer {
     }
 
     fun stopPlay() {
-        executorAudioReader.shutdown()
         audioTrack?.apply {
             stop()
             release()

@@ -12,15 +12,13 @@ import java.net.UnknownHostException
 import java.nio.ByteOrder
 
 class DeviceInfoRepository(private val context: Context) {
-    fun getCurrentDeviceInfo(): Result<DeviceInfoEntity> {
+    fun getCurrentDeviceInfo(): DeviceInfoEntity {
         val defaultName =
             Build.MANUFACTURER + " " + Build.MODEL + " " + Build.VERSION.RELEASE + " " + Build.VERSION.SDK_INT
-        return Result.success(
-            DeviceInfoEntity(
-                getDeviceID(context.contentResolver),
-                defaultName,
-                10
-            )
+        return DeviceInfoEntity(
+            getDeviceID(context.contentResolver),
+            defaultName,
+            10
         )
     }
 

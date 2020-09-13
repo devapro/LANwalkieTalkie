@@ -154,7 +154,7 @@ class ChanelController(
     private fun registerService(port: Int) {
         Timber.i("registerService")
         val result = deviceInfoRepository.getCurrentDeviceInfo()
-        result.getOrNull()?.apply {
+        result.apply {
             // Android NSD implementation is very unstable when services
             // registers with the same name. Will use "CHANNEL_NAME:DEVICE_ID:".
             val serviceInfo = NsdServiceInfo()
@@ -175,9 +175,6 @@ class ChanelController(
                 registrationListener
             )
             executorPing.scheduleWithFixedDelay({ ping() }, 1000, 2000, TimeUnit.MILLISECONDS)
-        }
-        result.exceptionOrNull()?.apply {
-            Timber.w(this)
         }
     }
 
