@@ -7,6 +7,7 @@ import android.util.Base64
 import io.reactivex.Observer
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.subjects.PublishSubject
 import pro.devapp.walkietalkiek.VoicePlayer
 import pro.devapp.walkietalkiek.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.data.DeviceInfoRepository
@@ -32,41 +33,27 @@ class ChanelController(
     private val executorPing = Executors.newSingleThreadScheduledExecutor()
 
     private val compositeDisposable = CompositeDisposable()
+    val subjectAudioData = PublishSubject.create<ByteArray>()
 
     private val voicePlayer = VoicePlayer()
 
     private val client = SocketClient().apply {
-        clientConnectionSubject.subscribe(object : Observer<String> {
-            override fun onSubscribe(d: Disposable) {
-                compositeDisposable.add(d)
-            }
-
-            override fun onNext(t: String) {
-                connectedDevicesRepository.addOrUpdateHostStateToConnected(t)
-            }
-
-            override fun onError(e: Throwable) {}
-
-            override fun onComplete() {}
-        })
-        clientDisconnectionSubject.subscribe(object : Observer<String> {
-            override fun onSubscribe(d: Disposable) {
-                compositeDisposable.add(d)
-            }
-
-            override fun onNext(t: String) {
-                connectedDevicesRepository.setHostDisconnected(t)
-            }
-
-            override fun onError(e: Throwable) {}
-
-            override fun onComplete() {}
-        })
+        clientConnectionSubject.subscribe {
+            connectedDevicesRepository.addOrUpdateHostStateToConnected(it)
+        }.also {
+            compositeDisposable.add(it)
+        }
+        clientDisconnectionSubject.subscribe {
+            connectedDevicesRepository.setHostDisconnected(it)
+        }.also {
+            compositeDisposable.add(it)
+        }
     }
     private val server = SocketServer() { hostAddress, data ->
         if (data.size > 20) {
             voicePlayer.play(data)
-            Timber.i("message: audio ${data.size}")
+            subjectAudioData.onNext(data)
+            Timber.i("message: audio ${data.size} from $hostAddress")
         } else {
             val message = String(data).trim()
             Timber.i("message: $message from $hostAddress")

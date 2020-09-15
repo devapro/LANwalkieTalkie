@@ -41,15 +41,24 @@ class MainActivity : AppCompatActivity() {
                 startVoiceRecorder()
             }
         })
-        val disposable =
-            (application as WalkieTalkieApp).connectedDevicesRepository.getConnectedDevicesList()
-                .observeOn(AndroidSchedulers.mainThread()).subscribe { list ->
-                    clientsList.setItems(list)
-                    clientsView.text = list.filter { it.isConnected }.size.toString()
-                }
-        compositeDisposable.add(disposable)
+        (application as WalkieTalkieApp).connectedDevicesRepository.getConnectedDevicesList()
+            .observeOn(AndroidSchedulers.mainThread()).subscribe { list ->
+                clientsList.setItems(list)
+                clientsView.text = list.filter { it.isConnected }.size.toString()
+            }
+            .also {
+                compositeDisposable.add(it)
+            }
 
-        compositeDisposable.add(bottomButtons.buttonsClickSubject.subscribe {
+        (application as WalkieTalkieApp).chanelController.subjectAudioData
+            .observeOn(AndroidSchedulers.mainThread()).subscribe {
+                audioView.text = it.size.toString()
+            }
+            .also {
+                compositeDisposable.add(it)
+            }
+
+        bottomButtons.buttonsClickSubject.subscribe {
             when (it) {
                 BottomButtons.Buttons.MESSAGES -> {
                     (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
@@ -61,7 +70,10 @@ class MainActivity : AppCompatActivity() {
                     finish()
                 }
             }
-        })
+        }
+            .also {
+                compositeDisposable.add(it)
+            }
 
         val ipAddress = (application as WalkieTalkieApp).deviceInfoRepository.getCurrentIp()
         ip.text = ipAddress
@@ -71,6 +83,7 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
         voiceRecorder.destroy()
         compositeDisposable.dispose()
+        compositeDisposable.clear()
     }
 
     override fun onDestroy() {

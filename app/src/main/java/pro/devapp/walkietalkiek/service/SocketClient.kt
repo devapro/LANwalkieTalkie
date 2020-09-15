@@ -113,8 +113,8 @@ class SocketClient : IClient {
             }
             executorServiceClients.execute {
                 if (!it.socket.isClosed) {
-                    val outputStream = DataOutputStream(it.socket.getOutputStream())
                     try {
+                        val outputStream = DataOutputStream(it.socket.getOutputStream())
                         var errorCounter = 0
                         while (it.socket.isConnected && !it.socket.isClosed) {
                             try {

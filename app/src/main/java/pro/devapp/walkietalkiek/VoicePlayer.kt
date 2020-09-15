@@ -4,6 +4,7 @@ import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioTrack
+import android.media.AudioTrack.PLAYSTATE_STOPPED
 import timber.log.Timber
 
 class VoicePlayer {
@@ -21,15 +22,28 @@ class VoicePlayer {
             )
             bufferSize = sampleRate * (java.lang.Short.SIZE / java.lang.Byte.SIZE) * 4
             if (bufferSize < minBufferSize) bufferSize = minBufferSize
-            audioTrack = AudioTrack(
-                AudioManager.STREAM_MUSIC,
-                sampleRate,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                // TODO check it
-                bufferSize,
-                AudioTrack.MODE_STREAM
-            ).apply {
+            audioTrack =
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    AudioTrack(
+                        AudioManager.STREAM_MUSIC,
+                        sampleRate,
+                        AudioFormat.CHANNEL_OUT_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT,
+                        bufferSize / 4,
+                        AudioTrack.MODE_STREAM,
+                        AudioTrack.WRITE_NON_BLOCKING
+                    )
+                } else {
+                    AudioTrack(
+                        AudioManager.STREAM_MUSIC,
+                        sampleRate,
+                        AudioFormat.CHANNEL_OUT_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT,
+                        bufferSize / 4,
+                        AudioTrack.MODE_STREAM
+                    )
+                }
+            audioTrack?.apply {
                 play()
             }
         }
@@ -37,6 +51,9 @@ class VoicePlayer {
 
     fun play(bytes: ByteArray) {
         Timber.i("play ${bytes.size} - ${bytes[0]} ${bytes[1]}")
+        if (audioTrack?.playState == PLAYSTATE_STOPPED) {
+            Timber.w("PLAYER STOPPED!!!")
+        }
         audioTrack?.apply {
             write(bytes, 0, bytes.size)
             Timber.i("write ${bytes.size}")
