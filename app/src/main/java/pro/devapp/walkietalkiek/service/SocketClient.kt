@@ -8,17 +8,13 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.nio.ByteBuffer
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.LinkedBlockingDeque
-import java.util.concurrent.TimeUnit
-import kotlin.collections.HashMap
+import java.util.concurrent.*
 
 class SocketClient : IClient {
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceClients = Executors.newCachedThreadPool()
     private val executorServiceReader = Executors.newFixedThreadPool(1)
-    private val sockets = HashMap<String, Connection>()
+    private val sockets = ConcurrentHashMap<String, Connection>()
     private val lock = Object()
 
     val clientConnectionSubject = PublishSubject.create<String>()
@@ -27,7 +23,7 @@ class SocketClient : IClient {
     /**
      * Data for sending
      */
-    private val outputQueueMap = java.util.HashMap<String, LinkedBlockingDeque<ByteBuffer>>()
+    private val outputQueueMap = ConcurrentHashMap<String, LinkedBlockingDeque<ByteBuffer>>()
 
     fun sendMessage(byteBuffer: ByteBuffer) {
         outputQueueMap.forEach { item ->

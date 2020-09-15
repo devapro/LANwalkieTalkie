@@ -9,6 +9,7 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.nio.ByteBuffer
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
@@ -27,7 +28,7 @@ class SocketServer(
     /**
      * Data for sending
      */
-    private val outputQueueMap = HashMap<String, LinkedBlockingDeque<ByteBuffer>>()
+    private val outputQueueMap = ConcurrentHashMap<String, LinkedBlockingDeque<ByteBuffer>>()
 
     private var socket: ServerSocket? = null
 

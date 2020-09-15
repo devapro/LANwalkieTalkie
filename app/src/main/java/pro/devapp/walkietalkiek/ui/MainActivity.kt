@@ -15,6 +15,7 @@ import pro.devapp.walkietalkiek.utils.permission.Permission
 import pro.devapp.walkietalkiek.utils.permission.UtilPermission
 import java.nio.ByteBuffer
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,7 +43,8 @@ class MainActivity : AppCompatActivity() {
             }
         })
         (application as WalkieTalkieApp).connectedDevicesRepository.getConnectedDevicesList()
-            .observeOn(AndroidSchedulers.mainThread()).subscribe { list ->
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { list ->
                 clientsList.setItems(list)
                 clientsView.text = list.filter { it.isConnected }.size.toString()
             }
@@ -51,7 +53,13 @@ class MainActivity : AppCompatActivity() {
             }
 
         (application as WalkieTalkieApp).chanelController.subjectAudioData
-            .observeOn(AndroidSchedulers.mainThread()).subscribe {
+            .timeout(1000, TimeUnit.MILLISECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnError {
+                audioView.text = "---"
+            }
+            .retry()
+            .subscribe {
                 audioView.text = it.size.toString()
             }
             .also {
