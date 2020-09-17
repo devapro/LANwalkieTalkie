@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.widget.RelativeLayout
 import io.reactivex.subjects.PublishSubject
-import io.reactivex.subjects.Subject
 import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.databinding.ViewPptButtonBinding
 
@@ -21,7 +20,7 @@ class PPTButton @JvmOverloads constructor(
     private val viewBinding = ViewPptButtonBinding.bind(
         LayoutInflater.from(context).inflate(R.layout.view_ppt_button, this, true)
     )
-    private val pushStateSubject = PublishSubject.create<Boolean>()
+    val pushStateSubject = PublishSubject.create<Boolean>()
 
     private val scaleDownAnimator = ObjectAnimator.ofPropertyValuesHolder(
         viewBinding.pulseBg,
@@ -66,9 +65,5 @@ class PPTButton @JvmOverloads constructor(
         scaleDownAnimator.cancel()
         viewBinding.pulseBg.scaleX = 1f
         viewBinding.pulseBg.scaleY = 1f
-    }
-
-    fun getPushActionSubject(): Subject<Boolean> {
-        return pushStateSubject
     }
 }

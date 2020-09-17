@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
                 compositeDisposable.add(it)
             }
 
-        bottomButtons.buttonsClickSubject.subscribe {
+        findViewById<BottomButtons>(R.id.bottomButtons).buttonsClickSubject.subscribe {
             when (it) {
                 BottomButtons.Buttons.MESSAGES -> {
                     (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
@@ -90,7 +90,6 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         voiceRecorder.destroy()
-        compositeDisposable.dispose()
         compositeDisposable.clear()
     }
 
@@ -114,13 +113,14 @@ class MainActivity : AppCompatActivity() {
         }
         voiceRecorder.create()
 
-        val disposable = ppt.getPushActionSubject().subscribe {
+        ppt.pushStateSubject.subscribe {
             if (it) {
                 voiceRecorder.startRecord()
             } else {
                 voiceRecorder.stopRecord()
             }
+        }.also {
+            compositeDisposable.add(it)
         }
-        compositeDisposable.add(disposable)
     }
 }
