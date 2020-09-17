@@ -14,6 +14,7 @@ class SocketClient : IClient {
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceClients = Executors.newCachedThreadPool()
     private val executorServiceReader = Executors.newFixedThreadPool(1)
+    private val reconnectTimer = Executors.newSingleThreadScheduledExecutor()
     private val sockets = ConcurrentHashMap<String, Connection>()
     private val lock = Object()
 
@@ -72,7 +73,7 @@ class SocketClient : IClient {
             Timber.i("removeClient $hostAddress")
             clientDisconnectionSubject.onNext(hostAddress)
             // try reconnect
-            addClient(socketAddress)
+            reconnectTimer.schedule({ addClient(socketAddress) }, 1000, TimeUnit.MILLISECONDS)
         }
     }
 
@@ -81,6 +82,7 @@ class SocketClient : IClient {
             it.value.future?.cancel(true)
             it.value.socket.close()
         }
+        reconnectTimer.shutdown()
         executorService.shutdown()
         executorServiceReader.shutdown()
         executorServiceClients.shutdown()

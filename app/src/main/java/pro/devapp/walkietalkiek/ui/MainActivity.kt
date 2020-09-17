@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { list ->
                 clientsList.setItems(list)
-                clientsView.text = list.filter { it.isConnected }.size.toString()
             }
             .also {
                 compositeDisposable.add(it)
@@ -61,6 +60,7 @@ class MainActivity : AppCompatActivity() {
             .retry()
             .subscribe {
                 audioView.text = it.size.toString()
+                waveView.setData(it, 8000)
             }
             .also {
                 compositeDisposable.add(it)
