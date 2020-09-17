@@ -9,3 +9,4 @@
 .cxx
 /.idea/codeStyles/codeStyleConfig.xml
 /utils/build/*
+/app/google-services.json
