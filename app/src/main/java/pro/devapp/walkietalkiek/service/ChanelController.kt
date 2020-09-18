@@ -16,6 +16,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 class ChanelController(
     context: Context,
@@ -36,6 +37,8 @@ class ChanelController(
     val subjectAudioData = PublishSubject.create<ByteArray>()
 
     private val voicePlayer = VoicePlayer()
+
+    private val isRegistered = AtomicBoolean(false)
 
     private val client = SocketClient().apply {
         clientConnectionSubject.subscribe {
@@ -118,11 +121,13 @@ class ChanelController(
     }
 
     fun stopDiscovery() {
-        nsdManager.apply {
-            stopServiceDiscovery(discoveryListener)
-            unregisterService(registrationListener)
+        if (isRegistered.get()) {
+            nsdManager.apply {
+                stopServiceDiscovery(discoveryListener)
+                unregisterService(registrationListener)
+            }
         }
-        compositeDisposable.dispose()
+        compositeDisposable.clear()
         executor.shutdown()
         executorPing.shutdown()
         client.stop()
@@ -132,6 +137,7 @@ class ChanelController(
 
     fun onServiceRegister() {
         nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+        isRegistered.set(true)
     }
 
     fun sendMessage(byteBuffer: ByteBuffer) {

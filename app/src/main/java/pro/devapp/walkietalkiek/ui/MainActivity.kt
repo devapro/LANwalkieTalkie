@@ -1,7 +1,10 @@
 package pro.devapp.walkietalkiek.ui
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import androidx.appcompat.app.AppCompatActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -35,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         val serviceIntent = Intent(this, WalkieService::class.java)
+        bindService(serviceIntent, serviceConnection, BIND_IMPORTANT)
         utilPermission.checkOrRequestPermissions(this, object : UtilPermission.PermissionCallback(
             arrayOf(Permission.AUDIO_RECORD)
         ) {
@@ -51,25 +55,10 @@ class MainActivity : AppCompatActivity() {
                 compositeDisposable.add(it)
             }
 
-        (application as WalkieTalkieApp).chanelController.subjectAudioData
-            .timeout(1000, TimeUnit.MILLISECONDS)
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnError {
-                audioView.text = "---"
-            }
-            .retry()
-            .subscribe {
-                audioView.text = it.size.toString()
-                waveView.setData(it, 8000)
-            }
-            .also {
-                compositeDisposable.add(it)
-            }
-
         findViewById<BottomButtons>(R.id.bottomButtons).buttonsClickSubject.subscribe {
             when (it) {
                 BottomButtons.Buttons.MESSAGES -> {
-                    (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
+                    serviceConnection.serviceInterface?.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
                 }
                 BottomButtons.Buttons.SETTINGS -> {
                 }
@@ -91,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
         voiceRecorder.destroy()
         compositeDisposable.clear()
+        unbindService(serviceConnection)
     }
 
     override fun onDestroy() {
@@ -109,7 +99,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun startVoiceRecorder() {
         voiceRecorder = VoiceRecorder() {
-            (application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap(it))
+            //(application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap(it))
+            serviceConnection.serviceInterface?.sendMessage(ByteBuffer.wrap(it))
         }
         voiceRecorder.create()
 
@@ -121,6 +112,36 @@ class MainActivity : AppCompatActivity() {
             }
         }.also {
             compositeDisposable.add(it)
+        }
+    }
+
+    private fun initWaveView() {
+        serviceConnection.serviceInterface?.getAudioData()?.apply {
+            timeout(1000, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnError {
+                    audioView.text = "---"
+                }
+                .retry()
+                .subscribe {
+                    audioView.text = it.size.toString()
+                    waveView.setData(it, 8000)
+                }
+                .also {
+                    compositeDisposable.add(it)
+                }
+        }
+    }
+
+    private val serviceConnection = object : ServiceConnection {
+        var serviceInterface: WalkieService.MBinder? = null
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            serviceInterface = service as WalkieService.MBinder
+            initWaveView()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            serviceInterface = null
         }
     }
 }

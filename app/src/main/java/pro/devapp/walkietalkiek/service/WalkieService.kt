@@ -3,21 +3,29 @@ package pro.devapp.walkietalkiek.service
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.os.Binder
 import android.os.IBinder
 import android.os.PowerManager
+import io.reactivex.subjects.PublishSubject
 import pro.devapp.walkietalkiek.WalkieTalkieApp
+import java.nio.ByteBuffer
 
 class WalkieService : Service() {
 
     private var wakeLock: PowerManager.WakeLock? = null
+    private var chanelController: ChanelController? = null
 
     override fun onBind(intent: Intent?): IBinder? {
-        return null
+        return binder
     }
 
     override fun onCreate() {
         super.onCreate()
-        (application as WalkieTalkieApp).chanelController.startDiscovery()
+        chanelController = ChanelController(
+            applicationContext,
+            (application as WalkieTalkieApp).deviceInfoRepository,
+            (application as WalkieTalkieApp).connectedDevicesRepository
+        ).apply { startDiscovery() }
         setWakeLock()
     }
 
@@ -26,12 +34,13 @@ class WalkieService : Service() {
             NotificationController.NOTIFICATION_ID,
             (application as WalkieTalkieApp).notificationController.createNotification()
         )
-        return START_REDELIVER_INTENT
+        return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        (application as WalkieTalkieApp).chanelController.stopDiscovery()
+        chanelController?.stopDiscovery()
+        chanelController = null
         releaseWakeLock()
     }
 
@@ -49,5 +58,20 @@ class WalkieService : Service() {
 
     private fun releaseWakeLock() {
         wakeLock?.release()
+    }
+
+    abstract class MBinder : Binder() {
+        abstract fun sendMessage(byteBuffer: ByteBuffer)
+        abstract fun getAudioData(): PublishSubject<ByteArray>?
+    }
+
+    private val binder = object : MBinder() {
+        override fun sendMessage(byteBuffer: ByteBuffer) {
+            this@WalkieService.chanelController?.sendMessage(byteBuffer)
+        }
+
+        override fun getAudioData(): PublishSubject<ByteArray>? {
+            return this@WalkieService.chanelController?.subjectAudioData
+        }
     }
 }
