@@ -10,3 +10,5 @@
 /.idea/codeStyles/codeStyleConfig.xml
 /utils/build/*
 /app/google-services.json
+/app/release/output-metadata.json
+/walkietalky.jks
