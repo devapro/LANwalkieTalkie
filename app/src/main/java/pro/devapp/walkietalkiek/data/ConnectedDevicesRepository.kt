@@ -15,7 +15,8 @@ class ConnectedDevicesRepository {
 
     private fun publishChanges() {
         val clientsList = clients.map { it.value }.toList()
-        clientsSubject.onNext(clientsList)
+        if (!clientsSubject.hasValue() || clientsSubject.hasObservers())
+            clientsSubject.onNext(clientsList)
     }
 
     fun addOrUpdateHostStateToConnected(hostAddress: String) {

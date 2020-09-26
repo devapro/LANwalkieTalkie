@@ -24,6 +24,7 @@ class ClientViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         when {
             currentDate - clientEntity.lastDataReceivedAt < 1000 && clientEntity.isConnected -> {
                 viewBinding.status.currentStatus = StatusIndicator.STATES.STATE_ACTIVE
+                viewBinding.status.postDelayed({ displayStatus(clientEntity) }, 1000)
             }
             clientEntity.isConnected -> {
                 viewBinding.status.currentStatus = StatusIndicator.STATES.STATE_ONLINE
@@ -32,8 +33,5 @@ class ClientViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
                 viewBinding.status.currentStatus = StatusIndicator.STATES.STATE_OFFLINE
             }
         }
-
-        //TODO
-        viewBinding.status.postDelayed({ displayStatus(clientEntity) }, 500)
     }
 }

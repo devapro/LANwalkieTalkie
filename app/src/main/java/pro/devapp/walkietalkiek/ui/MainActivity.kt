@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var voiceRecorder: VoiceRecorder
+    private var voiceRecorder: VoiceRecorder? = null
 
     private val utilPermission = UtilPermission()
     private val compositeDisposable = CompositeDisposable()
@@ -78,14 +78,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        voiceRecorder.destroy()
+        voiceRecorder?.destroy()
         compositeDisposable.clear()
         unbindService(serviceConnection)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        voiceRecorder.destroy()
     }
 
     override fun onRequestPermissionsResult(
@@ -102,13 +97,13 @@ class MainActivity : AppCompatActivity() {
             //(application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap(it))
             serviceConnection.serviceInterface?.sendMessage(ByteBuffer.wrap(it))
         }
-        voiceRecorder.create()
+        voiceRecorder?.create()
 
         ppt.pushStateSubject.subscribe {
             if (it) {
-                voiceRecorder.startRecord()
+                voiceRecorder?.startRecord()
             } else {
-                voiceRecorder.stopRecord()
+                voiceRecorder?.stopRecord()
             }
         }.also {
             compositeDisposable.add(it)
