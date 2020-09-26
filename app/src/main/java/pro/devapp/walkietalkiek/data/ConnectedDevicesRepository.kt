@@ -1,5 +1,6 @@
 package pro.devapp.walkietalkiek.data
 
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.ReplaySubject
 import io.reactivex.subjects.Subject
 import pro.devapp.walkietalkiek.entities.ClientEntity
@@ -12,6 +13,11 @@ import kotlin.collections.HashMap
 class ConnectedDevicesRepository {
     private val clients = HashMap<String, ClientEntity>()
     private val clientsSubject = ReplaySubject.createWithSize<List<ClientEntity>>(1)
+        .apply {
+            subscribeOn(
+                Schedulers.io()
+            )
+        }
 
     private fun publishChanges() {
         val clientsList = clients.map { it.value }.toList()

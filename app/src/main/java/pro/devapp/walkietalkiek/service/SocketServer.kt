@@ -1,5 +1,6 @@
 package pro.devapp.walkietalkiek.service
 
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
 import java.io.DataInputStream
@@ -32,8 +33,10 @@ class SocketServer(
 
     private var socket: ServerSocket? = null
 
-    val clientConnectionSubject = PublishSubject.create<InetSocketAddress>()
-    val clientDisconnectionSubject = PublishSubject.create<InetSocketAddress>()
+    val clientConnectionSubject =
+        PublishSubject.create<InetSocketAddress>().apply { subscribeOn(Schedulers.io()) }
+    val clientDisconnectionSubject =
+        PublishSubject.create<InetSocketAddress>().apply { subscribeOn(Schedulers.io()) }
 
     override fun initServer(): Int {
         if (socket != null && socket?.isClosed == false) {

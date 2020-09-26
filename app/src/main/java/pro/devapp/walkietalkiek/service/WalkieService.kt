@@ -8,6 +8,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import io.reactivex.subjects.PublishSubject
 import pro.devapp.walkietalkiek.WalkieTalkieApp
+import timber.log.Timber
 import java.nio.ByteBuffer
 
 class WalkieService : Service() {
@@ -67,6 +68,7 @@ class WalkieService : Service() {
 
     private val binder = object : MBinder() {
         override fun sendMessage(byteBuffer: ByteBuffer) {
+            Timber.i("sendMessage ${byteBuffer.array().size}")
             this@WalkieService.chanelController?.sendMessage(byteBuffer)
         }
 

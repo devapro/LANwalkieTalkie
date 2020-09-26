@@ -1,5 +1,6 @@
 package pro.devapp.walkietalkiek.service
 
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import timber.log.Timber
 import java.io.DataInputStream
@@ -18,8 +19,10 @@ class SocketClient : IClient {
     private val sockets = ConcurrentHashMap<String, Connection>()
     private val lock = Object()
 
-    val clientConnectionSubject = PublishSubject.create<String>()
-    val clientDisconnectionSubject = PublishSubject.create<String>()
+    val clientConnectionSubject =
+        PublishSubject.create<String>().apply { subscribeOn(Schedulers.io()) }
+    val clientDisconnectionSubject =
+        PublishSubject.create<String>().apply { subscribeOn(Schedulers.io()) }
 
     /**
      * Data for sending
@@ -89,14 +92,14 @@ class SocketClient : IClient {
     }
 
     private fun handleConnection(hostAddress: String) {
-        val socket = sockets[hostAddress]
+        val socket = sockets[hostAddress]?.socket
         socket?.let {
             val readingFuture = executorServiceClients.submit {
-                val dataInput = DataInputStream(it.socket.getInputStream())
+                val dataInput = DataInputStream(socket.getInputStream())
                 val byteArray = ByteArray(8192 * 8)
                 Timber.i("Started reading $hostAddress")
                 try {
-                    while (!it.socket.isClosed && !it.socket.isInputShutdown) {
+                    while (!socket.isClosed && !socket.isInputShutdown) {
                         val readCount = dataInput.read(byteArray)
                         if (readCount > 0) {
 
@@ -106,29 +109,31 @@ class SocketClient : IClient {
                 } catch (e: Exception) {
                     Timber.w(e)
                 } finally {
-
+                    sockets[hostAddress]?.future?.cancel(true)
+                    removeClient(hostAddress)
+                    Timber.i("remove 3 $hostAddress")
                 }
             }
-            executorServiceClients.execute {
-                if (!it.socket.isClosed) {
+            executorServiceClients.submit {
+                if (!socket.isClosed) {
                     try {
-                        val outputStream = DataOutputStream(it.socket.getOutputStream())
+                        val outputStream = DataOutputStream(socket.getOutputStream())
                         var errorCounter = 0
-                        while (it.socket.isConnected && !it.socket.isClosed) {
+                        while (socket.isConnected && !socket.isClosed) {
                             try {
                                 val buf =
-                                    if (outputQueueMap[it.socket.inetAddress.hostAddress]?.isEmpty() == true) {
-                                        outputQueueMap[it.socket.inetAddress.hostAddress]?.pollFirst(
+                                    if (outputQueueMap[socket.inetAddress.hostAddress]?.isEmpty() == true) {
+                                        outputQueueMap[socket.inetAddress.hostAddress]?.pollFirst(
                                             1000,
                                             TimeUnit.MILLISECONDS
                                         )
                                     } else {
-                                        outputQueueMap[it.socket.inetAddress.hostAddress]?.pollFirst()
+                                        outputQueueMap[socket.inetAddress.hostAddress]?.pollFirst()
                                     }
                                 buf?.let { byteArray ->
                                     outputStream.write(byteArray.array())
                                     outputStream.flush()
-                                    Timber.i("send data to ${it.socket.inetAddress.hostAddress}")
+                                    Timber.i("send data to ${socket.inetAddress.hostAddress}")
                                 }
                                 errorCounter = 0
                             } catch (e: Exception) {
@@ -144,12 +149,14 @@ class SocketClient : IClient {
                     } finally {
                         readingFuture.cancel(true)
                         removeClient(hostAddress)
-                        Timber.i("remove $hostAddress")
+                        Timber.i("remove 1 $hostAddress")
                     }
                 } else {
                     removeClient(hostAddress)
-                    Timber.i("remove $hostAddress")
+                    Timber.i("remove 2 $hostAddress")
                 }
+            }.also {
+                sockets[hostAddress] = Connection(socket, it)
             }
         }
     }
