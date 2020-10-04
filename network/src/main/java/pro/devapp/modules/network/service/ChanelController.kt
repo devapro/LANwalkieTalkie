@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.service
+package pro.devapp.modules.network.service
 
 import android.content.Context
 import android.net.nsd.NsdManager
@@ -10,7 +10,6 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 import pro.devapp.modules.storage.ConnectedDevicesRepository
 import pro.devapp.modules.storage.DeviceInfoRepository
-import pro.devapp.walkietalkiek.VoicePlayer
 import timber.log.Timber
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
@@ -36,7 +35,7 @@ class ChanelController(
     private val compositeDisposable = CompositeDisposable()
     val subjectAudioData = PublishSubject.create<ByteArray>()
 
-    private val voicePlayer = VoicePlayer()
+    //  private val voicePlayer = VoicePlayer()
 
     private val isRegistered = AtomicBoolean(false)
 
@@ -54,7 +53,6 @@ class ChanelController(
     }
     private val server = SocketServer() { hostAddress, data ->
         if (data.size > 20) {
-            voicePlayer.play(data)
             subjectAudioData.onNext(data)
             Timber.i("message: audio ${data.size} from $hostAddress")
         } else {
@@ -116,8 +114,6 @@ class ChanelController(
             val port = server.initServer()
             registerService(port)
         }
-        voicePlayer.create()
-        voicePlayer.startPlay()
     }
 
     fun stopDiscovery() {
@@ -132,7 +128,6 @@ class ChanelController(
         executorPing.shutdown()
         client.stop()
         server.stop()
-        voicePlayer.stopPlay()
     }
 
     fun onServiceRegister() {

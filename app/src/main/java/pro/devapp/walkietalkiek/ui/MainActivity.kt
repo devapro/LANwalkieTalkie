@@ -11,8 +11,8 @@ import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
 import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.VoiceRecorder
+import pro.devapp.walkietalkiek.WalkieService
 import pro.devapp.walkietalkiek.WalkieTalkieApp
-import pro.devapp.walkietalkiek.service.WalkieService
 import pro.devapp.walkietalkiek.ui.dialogs.MessagesDialog
 import pro.devapp.walkietalkiek.ui.dialogs.SettingsDialog
 import pro.devapp.walkietalkiek.ui.widgets.BottomButtons

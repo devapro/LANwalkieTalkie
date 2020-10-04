@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.service
+package pro.devapp.walkietalkiek
 
 import android.app.Service
 import android.content.Context
@@ -6,8 +6,9 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.os.PowerManager
+import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
-import pro.devapp.walkietalkiek.WalkieTalkieApp
+import pro.devapp.modules.network.service.ChanelController
 import timber.log.Timber
 import java.nio.ByteBuffer
 
@@ -15,6 +16,9 @@ class WalkieService : Service() {
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var chanelController: ChanelController? = null
+
+    private val voicePlayer = VoicePlayer()
+    private var disposable: Disposable? = null
 
     override fun onBind(intent: Intent?): IBinder? {
         return binder
@@ -35,6 +39,12 @@ class WalkieService : Service() {
             NotificationController.NOTIFICATION_ID,
             (application as WalkieTalkieApp).notificationController.createNotification()
         )
+        voicePlayer.create()
+        voicePlayer.startPlay()
+
+        disposable = chanelController?.subjectAudioData?.subscribe { data ->
+            voicePlayer.play(data)
+        }
         return START_STICKY
     }
 
@@ -42,6 +52,8 @@ class WalkieService : Service() {
         super.onDestroy()
         chanelController?.stopDiscovery()
         chanelController = null
+        disposable?.dispose()
+        voicePlayer.stopPlay()
         releaseWakeLock()
     }
 

@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.service
+package pro.devapp.modules.network.service
 
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo

@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.service
+package pro.devapp.modules.network.service
 
 import java.nio.ByteBuffer
 

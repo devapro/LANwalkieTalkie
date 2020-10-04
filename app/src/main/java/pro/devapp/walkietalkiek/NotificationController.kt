@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.service
+package pro.devapp.walkietalkiek
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.ui.MainActivity
 
 class NotificationController(private val context: Context) {
