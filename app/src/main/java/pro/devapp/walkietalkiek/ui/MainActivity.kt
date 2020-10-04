@@ -13,11 +13,12 @@ import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.VoiceRecorder
 import pro.devapp.walkietalkiek.WalkieTalkieApp
 import pro.devapp.walkietalkiek.service.WalkieService
+import pro.devapp.walkietalkiek.ui.dialogs.MessagesDialog
+import pro.devapp.walkietalkiek.ui.dialogs.SettingsDialog
 import pro.devapp.walkietalkiek.ui.widgets.BottomButtons
 import pro.devapp.walkietalkiek.utils.permission.Permission
 import pro.devapp.walkietalkiek.utils.permission.UtilPermission
 import java.nio.ByteBuffer
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -58,9 +59,11 @@ class MainActivity : AppCompatActivity() {
         findViewById<BottomButtons>(R.id.bottomButtons).buttonsClickSubject.subscribe {
             when (it) {
                 BottomButtons.Buttons.MESSAGES -> {
-                    serviceConnection.serviceInterface?.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
+                    MessagesDialog().show(supportFragmentManager, "MessagesDialog")
+                    //serviceConnection.serviceInterface?.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
                 }
                 BottomButtons.Buttons.SETTINGS -> {
+                    SettingsDialog().show(supportFragmentManager, "SettingsDialog")
                 }
                 BottomButtons.Buttons.EXIT -> {
                     stopService(serviceIntent)

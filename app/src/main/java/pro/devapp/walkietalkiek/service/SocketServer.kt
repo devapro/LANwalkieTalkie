@@ -71,7 +71,7 @@ class SocketServer(
     private fun handleConnection(client: Socket) {
         val hostAddress = client.inetAddress.hostAddress
         var errorCounter = 0
-        val readingFuture = executorService.submit {
+        val readingFuture = executorServiceRead.submit {
             val dataInput = DataInputStream(client.getInputStream())
             val byteArray = ByteArray(8192 * 8)
             Timber.i("Started reading $hostAddress")
@@ -106,10 +106,11 @@ class SocketServer(
                         buf?.let { byteArray ->
                             outputStream.write(byteArray.array())
                             outputStream.flush()
-                            Timber.i("send data to $hostAddress")
+                            Timber.i("send data to $hostAddress remind : ${outputQueueMap[hostAddress]?.size ?: -1}")
                         }
                         errorCounter = 0
                     } catch (e: Exception) {
+                        Timber.w(e)
                         errorCounter++
                         if (errorCounter > 3) {
                             Timber.d("errorCounter $errorCounter")
