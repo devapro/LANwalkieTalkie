@@ -1,2 +1,5 @@
+include ':network'
+include ':data'
+include ':storage'
 include ':app'
 rootProject.name = "WalkieTalkieK"
