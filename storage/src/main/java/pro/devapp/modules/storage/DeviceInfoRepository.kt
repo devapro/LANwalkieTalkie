@@ -1,11 +1,11 @@
-package pro.devapp.walkietalkiek.data
+package pro.devapp.modules.storage
 
 import android.content.Context
 import android.content.Context.WIFI_SERVICE
 import android.net.wifi.WifiManager
 import android.os.Build
-import pro.devapp.walkietalkiek.entities.DeviceInfoEntity
-import pro.devapp.walkietalkiek.utils.getDeviceID
+import pro.devapp.modules.data.entities.DeviceInfoEntity
+import pro.devapp.modules.utils.getDeviceID
 import java.math.BigInteger
 import java.net.InetAddress
 import java.net.UnknownHostException

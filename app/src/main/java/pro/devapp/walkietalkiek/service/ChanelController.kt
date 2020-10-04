@@ -8,9 +8,9 @@ import io.reactivex.Observer
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
+import pro.devapp.modules.storage.ConnectedDevicesRepository
+import pro.devapp.modules.storage.DeviceInfoRepository
 import pro.devapp.walkietalkiek.VoicePlayer
-import pro.devapp.walkietalkiek.data.ConnectedDevicesRepository
-import pro.devapp.walkietalkiek.data.DeviceInfoRepository
 import timber.log.Timber
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer

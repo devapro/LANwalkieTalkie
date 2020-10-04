@@ -1,4 +1,6 @@
-<manifest package="pro.devapp.modules.storage">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="pro.devapp.modules.storage">
 
-    /
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 </manifest>

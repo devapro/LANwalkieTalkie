@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.entities
+package pro.devapp.modules.data.entities
 
 data class ClientEntity(
     val hostAddress: String,

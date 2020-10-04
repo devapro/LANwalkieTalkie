@@ -1,9 +1,9 @@
-package pro.devapp.walkietalkiek.data
+package pro.devapp.modules.storage
 
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.ReplaySubject
 import io.reactivex.subjects.Subject
-import pro.devapp.walkietalkiek.entities.ClientEntity
+import pro.devapp.modules.data.entities.ClientEntity
 import java.util.*
 import kotlin.collections.HashMap
 

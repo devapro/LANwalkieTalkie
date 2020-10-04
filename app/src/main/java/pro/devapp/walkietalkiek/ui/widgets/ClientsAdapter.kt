@@ -3,7 +3,7 @@ package pro.devapp.walkietalkiek.ui.widgets
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import pro.devapp.walkietalkiek.entities.ClientEntity
+import pro.devapp.modules.data.entities.ClientEntity
 
 class ClientsAdapter : RecyclerView.Adapter<ClientViewHolder>() {
     private val items = ArrayList<ClientEntity>()

@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.utils
+package pro.devapp.modules.utils
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver

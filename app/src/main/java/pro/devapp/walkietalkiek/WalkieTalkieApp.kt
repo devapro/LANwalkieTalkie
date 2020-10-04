@@ -1,8 +1,8 @@
 package pro.devapp.walkietalkiek
 
 import android.app.Application
-import pro.devapp.walkietalkiek.data.ConnectedDevicesRepository
-import pro.devapp.walkietalkiek.data.DeviceInfoRepository
+import pro.devapp.modules.storage.ConnectedDevicesRepository
+import pro.devapp.modules.storage.DeviceInfoRepository
 import pro.devapp.walkietalkiek.service.NotificationController
 import timber.log.Timber
 import timber.log.Timber.DebugTree
