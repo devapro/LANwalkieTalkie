@@ -59,13 +59,16 @@ class ChanelController(
             Timber.i("message: audio ${data.size} from $hostAddress")
         } else {
             val message = String(data).trim()
-            subjectTextData.onNext(
-                MessageEntity(
-                    Date().time,
-                    hostAddress,
-                    message
+            // TODO
+            if (message != "ping") {
+                subjectTextData.onNext(
+                    MessageEntity(
+                        Date().time,
+                        hostAddress,
+                        message
+                    )
                 )
-            )
+            }
             Timber.i("message: $message from $hostAddress")
         }
         connectedDevicesRepository.storeDataReceivedTime(hostAddress)

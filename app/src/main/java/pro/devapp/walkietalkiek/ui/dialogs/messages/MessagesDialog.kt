@@ -42,7 +42,6 @@ class MessagesDialog : BaseBottomSheetDialog() {
                 screenBinding.messageText.setText("")
             }
         }
-
         viewModel.messages.observe(viewLifecycleOwner) {
             screenBinding.messagesList.setItems(it)
         }
