@@ -1,10 +1,11 @@
-package pro.devapp.walkietalkiek.ui.widgets
+package pro.devapp.walkietalkiek.ui.widgets.clients
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import pro.devapp.modules.data.entities.ClientEntity
 import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.databinding.ItemClientBinding
+import pro.devapp.walkietalkiek.ui.widgets.StatusIndicator
 import java.util.*
 
 class ClientViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

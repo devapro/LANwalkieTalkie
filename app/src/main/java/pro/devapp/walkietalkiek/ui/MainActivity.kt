@@ -13,8 +13,8 @@ import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.VoiceRecorder
 import pro.devapp.walkietalkiek.WalkieService
 import pro.devapp.walkietalkiek.WalkieTalkieApp
-import pro.devapp.walkietalkiek.ui.dialogs.MessagesDialog
 import pro.devapp.walkietalkiek.ui.dialogs.SettingsDialog
+import pro.devapp.walkietalkiek.ui.dialogs.messages.MessagesDialog
 import pro.devapp.walkietalkiek.ui.widgets.BottomButtons
 import pro.devapp.walkietalkiek.utils.permission.Permission
 import pro.devapp.walkietalkiek.utils.permission.UtilPermission
@@ -60,7 +60,6 @@ class MainActivity : AppCompatActivity() {
             when (it) {
                 BottomButtons.Buttons.MESSAGES -> {
                     MessagesDialog().show(supportFragmentManager, "MessagesDialog")
-                    //serviceConnection.serviceInterface?.sendMessage(ByteBuffer.wrap("test ${Date().seconds}".toByteArray()))
                 }
                 BottomButtons.Buttons.SETTINGS -> {
                     SettingsDialog().show(supportFragmentManager, "SettingsDialog")
@@ -95,10 +94,13 @@ class MainActivity : AppCompatActivity() {
         utilPermission.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    fun sendMessage(byteBuffer: ByteBuffer) {
+        serviceConnection.serviceInterface?.sendMessage(byteBuffer)
+    }
+
     private fun startVoiceRecorder() {
         voiceRecorder = VoiceRecorder() {
-            //(application as WalkieTalkieApp).chanelController.sendMessage(ByteBuffer.wrap(it))
-            serviceConnection.serviceInterface?.sendMessage(ByteBuffer.wrap(it))
+            sendMessage(ByteBuffer.wrap(it))
         }
         voiceRecorder?.create()
 

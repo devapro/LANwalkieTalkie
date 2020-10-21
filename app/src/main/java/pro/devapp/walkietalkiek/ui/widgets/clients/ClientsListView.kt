@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.ui.widgets
+package pro.devapp.walkietalkiek.ui.widgets.clients
 
 import android.content.Context
 import android.util.AttributeSet

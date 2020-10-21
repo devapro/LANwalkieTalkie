@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
 
-    <pro.devapp.walkietalkiek.ui.widgets.ClientsListView
+    <pro.devapp.walkietalkiek.ui.widgets.clients.ClientsListView
         android:id="@+id/clientsList"
         android:layout_width="match_parent"
         android:layout_height="150dp"

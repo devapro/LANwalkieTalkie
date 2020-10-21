@@ -53,23 +53,15 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_close_icon" />
 
-        <ScrollView
-            android:id="@+id/scroll"
+        <pro.devapp.walkietalkiek.ui.dialogs.messages.widgets.MessagesList
+            android:id="@+id/messagesList"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="16dp"
             app:layout_constraintBottom_toTopOf="@+id/inputBlock"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/closeButton">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-            </LinearLayout>
-        </ScrollView>
+            app:layout_constraintTop_toBottomOf="@+id/closeButton" />
 
         <FrameLayout
             android:id="@+id/inputBlock"
@@ -80,12 +72,14 @@
             app:layout_constraintStart_toStartOf="parent">
 
             <EditText
+                android:id="@+id/messageText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|start"
                 android:layout_marginEnd="56dp" />
 
             <ImageButton
+                android:id="@+id/send"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_gravity="center_vertical|end"

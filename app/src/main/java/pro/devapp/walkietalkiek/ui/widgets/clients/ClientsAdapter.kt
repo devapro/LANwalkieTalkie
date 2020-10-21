@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.ui.widgets
+package pro.devapp.walkietalkiek.ui.widgets.clients
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
