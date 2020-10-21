@@ -1,3 +1,5 @@
+apply plugin: 'kotlin-kapt'
+
 android {
     def ext = rootProject.extensions.ext
 
@@ -55,6 +57,12 @@ dependencies {
     //rx
     implementation 'io.reactivex.rxjava2:rxjava:2.2.19'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+
+    //dagger
+   // api "com.google.dagger:dagger:2.27"
+    kapt "com.google.dagger:dagger-compiler:2.27"
+    kapt 'com.google.dagger:dagger-android-processor:2.27'
+    implementation 'com.google.dagger:dagger-android-support:2.27'
 
     //logs
     implementation 'com.jakewharton.timber:timber:4.7.1'

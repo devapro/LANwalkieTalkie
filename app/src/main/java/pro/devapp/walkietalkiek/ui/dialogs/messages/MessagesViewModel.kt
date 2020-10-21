@@ -8,8 +8,9 @@ import pro.devapp.modules.storage.DeviceInfoRepository
 import pro.devapp.modules.storage.MessagesRepository
 import pro.devapp.walkietalkiek.ui.BaseViewModel
 import java.util.*
+import javax.inject.Inject
 
-class MessagesViewModel(
+class MessagesViewModel @Inject constructor(
     application: Application,
     private val deviceInfoRepository: DeviceInfoRepository,
     private val messagesRepository: MessagesRepository
@@ -19,7 +20,7 @@ class MessagesViewModel(
 
     init {
         messagesRepository.getMessages().subscribe {
-            messages.postValue(it)
+            messages.postValue(it.reversed())
         }.apply {
             compositeDisposable.add(this)
         }

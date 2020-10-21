@@ -8,14 +8,17 @@ import io.reactivex.Observer
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
+import pro.devapp.modules.data.entities.MessageEntity
 import pro.devapp.modules.storage.ConnectedDevicesRepository
 import pro.devapp.modules.storage.DeviceInfoRepository
 import timber.log.Timber
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.collections.HashMap
 
 class ChanelController(
     context: Context,
@@ -34,8 +37,7 @@ class ChanelController(
 
     private val compositeDisposable = CompositeDisposable()
     val subjectAudioData = PublishSubject.create<ByteArray>()
-
-    //  private val voicePlayer = VoicePlayer()
+    val subjectTextData = PublishSubject.create<MessageEntity>()
 
     private val isRegistered = AtomicBoolean(false)
 
@@ -57,6 +59,13 @@ class ChanelController(
             Timber.i("message: audio ${data.size} from $hostAddress")
         } else {
             val message = String(data).trim()
+            subjectTextData.onNext(
+                MessageEntity(
+                    Date().time,
+                    hostAddress,
+                    message
+                )
+            )
             Timber.i("message: $message from $hostAddress")
         }
         connectedDevicesRepository.storeDataReceivedTime(hostAddress)

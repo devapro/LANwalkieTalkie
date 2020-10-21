@@ -6,6 +6,7 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
@@ -20,17 +21,24 @@ import pro.devapp.walkietalkiek.utils.permission.Permission
 import pro.devapp.walkietalkiek.utils.permission.UtilPermission
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
 
-    private var voiceRecorder: VoiceRecorder? = null
+    @Inject
+    lateinit var utilPermission: UtilPermission
 
-    private val utilPermission = UtilPermission()
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private var voiceRecorder: VoiceRecorder? = null
     private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        (application as WalkieTalkieApp).applicationComponent.inject(this)
 
         val serviceIntent = Intent(this, WalkieService::class.java)
         startService(serviceIntent)

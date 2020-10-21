@@ -6,11 +6,13 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.os.PowerManager
-import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import pro.devapp.modules.network.service.ChanelController
+import pro.devapp.modules.storage.MessagesRepository
 import timber.log.Timber
 import java.nio.ByteBuffer
+import javax.inject.Inject
 
 class WalkieService : Service() {
 
@@ -18,7 +20,10 @@ class WalkieService : Service() {
     private var chanelController: ChanelController? = null
 
     private val voicePlayer = VoicePlayer()
-    private var disposable: Disposable? = null
+    private var compositeDisposable = CompositeDisposable()
+
+    @Inject
+    lateinit var messagesRepository: MessagesRepository
 
     override fun onBind(intent: Intent?): IBinder? {
         return binder
@@ -26,11 +31,14 @@ class WalkieService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        (application as WalkieTalkieApp).applicationComponent.inject(this)
         chanelController = ChanelController(
             applicationContext,
             (application as WalkieTalkieApp).deviceInfoRepository,
             (application as WalkieTalkieApp).connectedDevicesRepository
-        ).apply { startDiscovery() }
+        ).apply {
+            startDiscovery()
+        }
         setWakeLock()
     }
 
@@ -42,8 +50,15 @@ class WalkieService : Service() {
         voicePlayer.create()
         voicePlayer.startPlay()
 
-        disposable = chanelController?.subjectAudioData?.subscribe { data ->
+        chanelController?.subjectAudioData?.subscribe { data ->
             voicePlayer.play(data)
+        }?.apply {
+            compositeDisposable.add(this)
+        }
+        chanelController?.subjectTextData?.subscribe {
+            messagesRepository.addMessage(it)
+        }?.apply {
+            compositeDisposable.add(this)
         }
         return START_STICKY
     }
@@ -52,7 +67,7 @@ class WalkieService : Service() {
         super.onDestroy()
         chanelController?.stopDiscovery()
         chanelController = null
-        disposable?.dispose()
+        compositeDisposable.clear()
         voicePlayer.stopPlay()
         releaseWakeLock()
     }

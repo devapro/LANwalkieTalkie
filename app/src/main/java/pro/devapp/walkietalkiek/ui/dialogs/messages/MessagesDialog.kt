@@ -4,12 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.observe
-import pro.devapp.modules.storage.DeviceInfoRepository
-import pro.devapp.modules.storage.MessagesRepository
 import pro.devapp.walkietalkiek.databinding.DialogMessagesBinding
 import pro.devapp.walkietalkiek.ui.MainActivity
 import pro.devapp.walkietalkiek.ui.dialogs.BaseBottomSheetDialog
@@ -17,17 +13,16 @@ import pro.devapp.walkietalkiek.ui.viewBinding
 import java.nio.ByteBuffer
 
 class MessagesDialog : BaseBottomSheetDialog() {
+
     override val screenBinding by viewBinding(DialogMessagesBinding::inflate)
-    override val viewModel by viewModels<MessagesViewModel>() {
-        object : ViewModelProvider.NewInstanceFactory() {
-            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                return MessagesViewModel(
-                    requireActivity().application,
-                    DeviceInfoRepository(requireContext()),
-                    MessagesRepository()
-                ) as T
-            }
-        }
+    override lateinit var viewModel: MessagesViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProviders.of(
+            this,
+            (requireActivity() as MainActivity).viewModelFactory
+        )[MessagesViewModel::class.java]
     }
 
     override fun onCreateView(

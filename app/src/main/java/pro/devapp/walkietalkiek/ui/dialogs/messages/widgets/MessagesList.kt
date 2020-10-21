@@ -19,5 +19,6 @@ class MessagesList @JvmOverloads constructor(
 
     fun setItems(newMessages: List<MessageEntity>) {
         (adapter as MessagesAdapter).setMessages(newMessages)
+        smoothScrollToPosition(0)
     }
 }
