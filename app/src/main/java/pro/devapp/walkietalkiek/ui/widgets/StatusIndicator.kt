@@ -13,7 +13,7 @@ class StatusIndicator @JvmOverloads constructor(
         val STATE_ACTIVE = intArrayOf(R.attr.state_active)
     }
 
-    var currentStatus: STATES? = STATES.STATE_OFFLINE
+    var currentStatus: STATES = STATES.STATE_OFFLINE
         set(value) {
             field = value
             refreshDrawableState()

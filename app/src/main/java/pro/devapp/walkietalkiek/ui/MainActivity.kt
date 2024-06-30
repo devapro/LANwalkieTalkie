@@ -5,10 +5,10 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import kotlinx.android.synthetic.main.activity_main.*
 import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.VoiceRecorder
 import pro.devapp.walkietalkiek.WalkieTalkieApp
+import pro.devapp.walkietalkiek.databinding.ActivityMainBinding
 import pro.devapp.walkietalkiek.service.WalkieService
 import pro.devapp.walkietalkiek.ui.widgets.BottomButtons
 import pro.devapp.walkietalkiek.utils.permission.Permission
@@ -23,10 +23,12 @@ class MainActivity : AppCompatActivity() {
 
     private val utilPermission = UtilPermission()
     private val compositeDisposable = CompositeDisposable()
+    private lateinit var viewBinding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        viewBinding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(viewBinding.root)
 
         val serviceIntent = Intent(this, WalkieService::class.java)
         startService(serviceIntent)
@@ -45,7 +47,7 @@ class MainActivity : AppCompatActivity() {
         (application as WalkieTalkieApp).connectedDevicesRepository.getConnectedDevicesList()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { list ->
-                clientsList.setItems(list)
+                viewBinding.clientsList.setItems(list)
             }
             .also {
                 compositeDisposable.add(it)
@@ -55,12 +57,12 @@ class MainActivity : AppCompatActivity() {
             .timeout(1000, TimeUnit.MILLISECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .doOnError {
-                audioView.text = "---"
+                viewBinding.audioView.text = "---"
             }
             .retry()
             .subscribe {
-                audioView.text = it.size.toString()
-                waveView.setData(it, 8000)
+                viewBinding.audioView.text = it.size.toString()
+                viewBinding.waveView.setData(it, 8000)
             }
             .also {
                 compositeDisposable.add(it)
@@ -84,7 +86,7 @@ class MainActivity : AppCompatActivity() {
             }
 
         val ipAddress = (application as WalkieTalkieApp).deviceInfoRepository.getCurrentIp()
-        ip.text = ipAddress
+        viewBinding.ip.text = ipAddress
     }
 
     override fun onStop() {
@@ -113,7 +115,7 @@ class MainActivity : AppCompatActivity() {
         }
         voiceRecorder.create()
 
-        ppt.pushStateSubject.subscribe {
+        viewBinding.ppt.pushStateSubject.subscribe {
             if (it) {
                 voiceRecorder.startRecord()
             } else {

@@ -11,7 +11,7 @@ class ClientViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val viewBinding = ItemClientBinding.bind(itemView)
 
     companion object {
-        const val LAYOUT_ID = R.layout.item_client
+        val LAYOUT_ID = R.layout.item_client
     }
 
     fun onBind(clientEntity: ClientEntity) {

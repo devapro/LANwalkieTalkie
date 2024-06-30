@@ -16,11 +16,7 @@ class WalkieTalkieApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        if (BuildConfig.DEBUG) {
-            Timber.plant(DebugTree())
-        } else {
-            //Timber.plant(CrashReportingTree())
-        }
+        Timber.plant(DebugTree())
         deviceInfoRepository = DeviceInfoRepository(applicationContext)
         connectedDevicesRepository = ConnectedDevicesRepository()
 

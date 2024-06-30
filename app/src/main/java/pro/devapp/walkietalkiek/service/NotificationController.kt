@@ -25,7 +25,7 @@ class NotificationController(private val context: Context) {
             context,
             0,
             notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_MUTABLE
         )
 
         val builder = NotificationCompat.Builder(context)
