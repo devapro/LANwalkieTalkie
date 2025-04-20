@@ -42,7 +42,7 @@ class WalkieService : Service() {
                     PowerManager.PARTIAL_WAKE_LOCK,
                     "WalkieTalkyApp::ServiceWakelockTag"
                 ).apply {
-                    acquire()
+                    acquire(10*60*1000L /*10 minutes*/)
                 }
             }
     }
