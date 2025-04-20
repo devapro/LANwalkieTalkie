@@ -23,6 +23,15 @@ class DeviceInfoRepository(private val context: Context) {
     }
 
     fun getCurrentIp(): String? {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            connectivityManager.activeNetwork?.let { network ->
+                val linkProperties = connectivityManager.getLinkProperties(network)
+                return linkProperties?.linkAddresses?.filter { it.address.isLoopbackAddress.not() }?.map { linkAddress ->
+                    linkAddress.address.hostAddress
+                }?.joinToString("\n")
+            }
+        }
         val wifiManager = (context.applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
         var ipAddress = wifiManager.connectionInfo.ipAddress
 

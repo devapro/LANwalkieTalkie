@@ -1,0 +1,24 @@
+name: Create build
+
+on:
+  pull_request:
+    types: [ labeled ]
+
+jobs:
+  create-qa-build:
+    if: ${{ github.event.label.name == 'Create Build' }}
+    timeout-minutes: 40
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create debug build
+        run: ./gradlew assembleDebug
+
+      - name: Upload Apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
