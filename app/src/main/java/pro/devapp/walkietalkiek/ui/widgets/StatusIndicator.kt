@@ -7,13 +7,8 @@ import pro.devapp.walkietalkiek.R
 class StatusIndicator @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : androidx.appcompat.widget.AppCompatImageView(context, attrs, defStyleAttr) {
-    companion object {
-        val STATE_OFFLINE = intArrayOf(R.attr.state_offline)
-        val STATE_ONLINE = intArrayOf(R.attr.state_online)
-        val STATE_ACTIVE = intArrayOf(R.attr.state_active)
-    }
 
-    var currentStatus: STATES = STATES.STATE_OFFLINE
+    var currentStatus: STATES? = STATES.STATE_OFFLINE
         set(value) {
             field = value
             refreshDrawableState()
@@ -21,23 +16,17 @@ class StatusIndicator @JvmOverloads constructor(
 
     override fun onCreateDrawableState(extraSpace: Int): IntArray {
         val drawableState = super.onCreateDrawableState(extraSpace + 2)
-        when (currentStatus) {
-            STATES.STATE_OFFLINE -> {
-                mergeDrawableStates(drawableState, STATE_OFFLINE)
-            }
-            STATES.STATE_ONLINE -> {
-                mergeDrawableStates(drawableState, STATE_ONLINE)
-            }
-            STATES.STATE_ACTIVE -> {
-                mergeDrawableStates(drawableState, STATE_ACTIVE)
-            }
+        currentStatus?.let { status ->
+            mergeDrawableStates(drawableState, intArrayOf(status.drawable))
+        } ?: run {
+            mergeDrawableStates(drawableState, intArrayOf(STATES.STATE_OFFLINE.drawable))
         }
         return drawableState
     }
 
-    enum class STATES {
-        STATE_OFFLINE,
-        STATE_ONLINE,
-        STATE_ACTIVE
+    enum class STATES (val drawable: Int) {
+        STATE_OFFLINE(R.attr.state_offline),
+        STATE_ONLINE(R.attr.state_online),
+        STATE_ACTIVE(R.attr.state_active)
     }
 }
