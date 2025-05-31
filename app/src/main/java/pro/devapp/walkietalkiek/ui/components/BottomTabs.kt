@@ -12,9 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import pro.devapp.walkietalkiek.R
+import pro.devapp.walkietalkiek.model.MainScreenAction
+import pro.devapp.walkietalkiek.model.MainScreenState
+import pro.devapp.walkietalkiek.model.MainTabItem
 
 @Composable
-fun BottomTabs() {
+fun BottomTabs(
+    modifier: Modifier = Modifier,
+    screenState: MainScreenState,
+    onAction: (MainScreenAction) -> Unit = {}
+) {
     BottomAppBar(
         modifier = Modifier.fillMaxWidth(),
         windowInsets = WindowInsets.navigationBars

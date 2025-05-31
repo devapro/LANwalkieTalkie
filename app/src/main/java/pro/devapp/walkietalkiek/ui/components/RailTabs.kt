@@ -10,12 +10,42 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import pro.devapp.walkietalkiek.R
+import pro.devapp.walkietalkiek.model.MainScreenAction
+import pro.devapp.walkietalkiek.model.MainScreenState
+import pro.devapp.walkietalkiek.model.MainTabItem
 
 @Composable
 fun RailTabs(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    screenState: MainScreenState,
+    onAction: (MainScreenAction) -> Unit = {}
 ) {
     NavigationRail(modifier = modifier) {
+        screenState.mainTabs.forEach {
+            NavigationRailItem(
+                selected = it.screen == screenState.currentTab,
+                onClick = {
+                    onAction(
+                        MainScreenAction.ChangeScreen(
+                            it.screen
+                        )
+                    )
+                },
+                icon = {
+                    Icon(
+                        painter = painterResource(it.icon),
+                        contentDescription = it.title
+                    )
+                },
+                label = {
+                    Text(
+                        text = it.title,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            )
+        }
         NavigationRailItem(
             selected = true,
             onClick = {

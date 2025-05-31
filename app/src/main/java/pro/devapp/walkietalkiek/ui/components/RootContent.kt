@@ -3,11 +3,27 @@ package pro.devapp.walkietalkiek.ui.components
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import pro.devapp.walkietalkiek.feature.ptt.PTTContent
+import pro.devapp.walkietalkiek.model.MainScreenAction
+import pro.devapp.walkietalkiek.model.MainScreenState
+import pro.devapp.walkietalkiek.model.MainTab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RootContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    state: MainScreenState,
+    onAction: (MainScreenAction) -> Unit = {}
 ) {
-
+    when(state.currentTab) {
+        MainTab.PTT -> {
+            PTTContent(modifier = modifier)
+        }
+        MainTab.SETTINGS -> {
+            // SettingsContent(modifier = modifier)
+        }
+        MainTab.CHAT -> {
+            // AboutContent(modifier = modifier)
+        }
+    }
 }

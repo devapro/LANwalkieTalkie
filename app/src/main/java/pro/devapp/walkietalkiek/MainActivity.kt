@@ -12,6 +12,7 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowSize
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldLayout
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -19,6 +20,8 @@ import androidx.compose.ui.unit.toSize
 import androidx.window.core.layout.WindowHeightSizeClass
 import androidx.window.core.layout.WindowSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass
+import org.koin.androidx.compose.getViewModel
+import pro.devapp.walkietalkiek.ui.MainViewMode
 import pro.devapp.walkietalkiek.ui.components.BottomTabs
 import pro.devapp.walkietalkiek.ui.components.RailTabs
 import pro.devapp.walkietalkiek.ui.components.RootContent
@@ -33,6 +36,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val viewModel: MainViewMode = getViewModel()
+            val state = viewModel.state.collectAsState()
+
             DroidPTTTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -55,13 +61,18 @@ class MainActivity : ComponentActivity() {
                         navigationSuite = {
                             when (navLayoutType) {
                                 NavigationSuiteType.NavigationBar -> {
-                                    BottomTabs()
+                                    BottomTabs(
+                                        screenState = state.value,
+                                        onAction = viewModel::onAction
+                                    )
                                 }
 
                                 NavigationSuiteType.NavigationRail -> {
                                     RailTabs(
                                         modifier = Modifier
-                                            .padding(innerPadding)
+                                            .padding(innerPadding),
+                                        screenState = state.value,
+                                        onAction = viewModel::onAction
                                     )
                                 }
 
@@ -72,7 +83,9 @@ class MainActivity : ComponentActivity() {
                         }
                     ) {
                         RootContent(
-                            modifier = Modifier.padding(innerPadding)
+                            modifier = Modifier.padding(innerPadding),
+                            state = state.value,
+                            onAction = viewModel::onAction
                         )
                     }
                 }
