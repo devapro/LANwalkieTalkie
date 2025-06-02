@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
                         adaptiveInfo.windowPosture.isTabletop -> NavigationSuiteType.NavigationBar
                         adaptiveInfo.windowSizeClass.isCompact() -> NavigationSuiteType.NavigationBar
                         adaptiveInfo.windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.EXPANDED &&
-                                windowSize.width >= 1200.dp -> NavigationSuiteType.NavigationDrawer
+                                windowSize.width >= 1200.dp -> NavigationSuiteType.NavigationRail
 
                         else -> NavigationSuiteType.NavigationRail
                     }

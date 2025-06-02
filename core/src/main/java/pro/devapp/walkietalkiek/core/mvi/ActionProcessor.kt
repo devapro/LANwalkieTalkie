@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 abstract class ActionProcessor<STATE, ACTION : Any, EVENT>(
     private val reducers: Set<Reducer<ACTION, STATE, ACTION, EVENT>>,
@@ -45,7 +44,6 @@ abstract class ActionProcessor<STATE, ACTION : Any, EVENT>(
         val result = try {
             reducers.firstOrNull { it.actionClass == action::class }?.reduce(action) { _state.value }
         } catch (e: ClassCastException) {
-            Timber.e(e)
             // return the same state in case the expected state does not match the actual state
             Reducer.Result(_state.value)
         }

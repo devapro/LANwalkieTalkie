@@ -1,6 +1,7 @@
 package pro.devapp.walkietalkiek.feature.ptt
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -23,8 +24,11 @@ fun PTTButton(
             .background(
                 color = if (isOnline) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 shape = CircleShape
+            ).clickable(
+                enabled = isOnline,
+                onClick = onClick
             ),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = if (isOnline) "PTT" else "Offline",

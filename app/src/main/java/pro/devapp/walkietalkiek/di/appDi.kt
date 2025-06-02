@@ -7,6 +7,7 @@ import org.koin.dsl.module
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.factory.MainScreenInitStateFactory
 import pro.devapp.walkietalkiek.factory.MainTabsFactory
+import pro.devapp.walkietalkiek.reducers.ChangeScreenReducer
 import pro.devapp.walkietalkiek.reducers.MainActionProcessor
 import pro.devapp.walkietalkiek.ui.MainViewMode
 
@@ -31,10 +32,11 @@ private fun Module.viewModelsDi() {
 }
 
 private fun Module.reducersDi() {
+    factoryOf(::ChangeScreenReducer)
     factory {
         MainActionProcessor(
             reducers = setOf(
-                get(ScreenLoadReducer::class)
+                get(ChangeScreenReducer::class)
             ),
             initStateFactory = get(),
             coroutineContextProvider = get()

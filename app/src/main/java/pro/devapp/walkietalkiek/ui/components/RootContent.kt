@@ -1,5 +1,6 @@
 package pro.devapp.walkietalkiek.ui.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,17 +14,21 @@ import pro.devapp.walkietalkiek.model.MainTab
 fun RootContent(
     modifier: Modifier = Modifier,
     state: MainScreenState,
-    onAction: (MainScreenAction) -> Unit = {}
+    onAction: (MainScreenAction) -> Unit
 ) {
-    when(state.currentTab) {
-        MainTab.PTT -> {
-            PTTContent(modifier = modifier)
-        }
-        MainTab.SETTINGS -> {
-            // SettingsContent(modifier = modifier)
-        }
-        MainTab.CHAT -> {
-            // AboutContent(modifier = modifier)
+    Box(
+        modifier = modifier
+    ) {
+        when(state.currentTab) {
+            MainTab.PTT -> {
+                PTTContent()
+            }
+            MainTab.SETTINGS -> {
+                // SettingsContent(modifier = modifier)
+            }
+            MainTab.CHAT -> {
+                // AboutContent(modifier = modifier)
+            }
         }
     }
 }

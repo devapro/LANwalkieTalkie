@@ -19,6 +19,12 @@ class MainTabsFactory {
                 title = "Settings",
                 icon = R.drawable.ic_settings,
                 screen = MainTab.SETTINGS
+            ),
+            MainTabItem(
+                id = "chat",
+                title = "Chat",
+                icon = R.drawable.ic_settings,
+                screen = MainTab.CHAT
             )
         )
     }

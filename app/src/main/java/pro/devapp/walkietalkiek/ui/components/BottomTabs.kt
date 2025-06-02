@@ -11,10 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
-import pro.devapp.walkietalkiek.R
 import pro.devapp.walkietalkiek.model.MainScreenAction
 import pro.devapp.walkietalkiek.model.MainScreenState
-import pro.devapp.walkietalkiek.model.MainTabItem
 
 @Composable
 fun BottomTabs(
@@ -23,65 +21,34 @@ fun BottomTabs(
     onAction: (MainScreenAction) -> Unit = {}
 ) {
     BottomAppBar(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         windowInsets = WindowInsets.navigationBars
     ) {
-        NavigationBarItem(
-            selected = true,
-            onClick = {
-
-            },
-            icon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_settings),
-                    contentDescription = "Settings"
-                )
-            },
-            label = {
-                Text(
-                    text = "Home",
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        )
-        NavigationBarItem(
-            selected = false,
-            icon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_settings),
-                    contentDescription = "Settings"
-                )
-            },
-            onClick = {
-
-            },
-            label = {
-                Text(
-                    text = "Settings",
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        )
-        NavigationBarItem(
-            selected = false,
-            icon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_settings),
-                    contentDescription = "Settings"
-                )
-            },
-            onClick = {
-
-            },
-            label = {
-                Text(
-                    text = "?",
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        )
+        screenState.mainTabs.forEach {
+            NavigationBarItem(
+                selected = it.screen == screenState.currentTab,
+                enabled = true,
+                onClick = {
+                    onAction(
+                        MainScreenAction.ChangeScreen(
+                            it.screen
+                        )
+                    )
+                },
+                icon = {
+                    Icon(
+                        painter = painterResource(it.icon),
+                        contentDescription = it.title
+                    )
+                },
+                label = {
+                    Text(
+                        text = it.title,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            )
+        }
     }
 }

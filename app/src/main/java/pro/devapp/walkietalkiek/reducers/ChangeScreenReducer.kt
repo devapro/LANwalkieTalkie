@@ -13,7 +13,12 @@ class ChangeScreenReducer: Reducer<MainScreenAction.ChangeScreen, MainScreenStat
         action: MainScreenAction.ChangeScreen,
         getState: () -> MainScreenState
     ): Reducer.Result<MainScreenState, MainScreenAction, MainScreenEvent?> {
-        TODO("Not yet implemented")
+        return Reducer.Result(
+            state = getState().copy(
+                currentTab = action.screen
+            ),
+            event = null
+        )
     }
 
 }

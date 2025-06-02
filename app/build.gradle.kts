@@ -54,8 +54,6 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.android.compose)
 
-    implementation(project(":app"))
-
     implementation(project(":core"))
     implementation(project(":feature-ptt"))
     implementation(project(":feature-chat"))
