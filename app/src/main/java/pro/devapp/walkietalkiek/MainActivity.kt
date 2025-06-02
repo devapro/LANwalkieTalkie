@@ -21,11 +21,11 @@ import androidx.window.core.layout.WindowHeightSizeClass
 import androidx.window.core.layout.WindowSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass
 import org.koin.androidx.compose.getViewModel
+import pro.devapp.walkietalkiek.core.theme.DroidPTTTheme
 import pro.devapp.walkietalkiek.ui.MainViewMode
 import pro.devapp.walkietalkiek.ui.components.BottomTabs
 import pro.devapp.walkietalkiek.ui.components.RailTabs
 import pro.devapp.walkietalkiek.ui.components.RootContent
-import pro.devapp.walkietalkiek.ui.theme.DroidPTTTheme
 
 private fun WindowSizeClass.isCompact() = windowWidthSizeClass == WindowWidthSizeClass.COMPACT ||
         windowHeightSizeClass == WindowHeightSizeClass.COMPACT
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     val navLayoutType = when {
-                        adaptiveInfo.windowPosture.isTabletop -> NavigationSuiteType.NavigationBar
+                        adaptiveInfo.windowPosture.isTabletop -> NavigationSuiteType.NavigationRail
                         adaptiveInfo.windowSizeClass.isCompact() -> NavigationSuiteType.NavigationBar
                         adaptiveInfo.windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.EXPANDED &&
                                 windowSize.width >= 1200.dp -> NavigationSuiteType.NavigationRail
