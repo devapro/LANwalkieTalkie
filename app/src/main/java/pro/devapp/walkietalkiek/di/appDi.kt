@@ -4,6 +4,7 @@ import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
+import pro.devapp.walkietalkiek.app.di.registerLegacyAppDi
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.factory.MainScreenInitStateFactory
 import pro.devapp.walkietalkiek.factory.MainTabsFactory
@@ -16,6 +17,7 @@ val appModule: Module = module {
     factoriesDi()
     viewModelsDi()
     reducersDi()
+    registerLegacyAppDi()
 }
 
 private fun Module.coreDi() {

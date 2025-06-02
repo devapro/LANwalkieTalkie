@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.android)
     implementation(libs.koin.android.compose)
+    implementation(libs.timber)
 
     implementation(project(":core"))
     implementation(project(":feature-ptt"))
