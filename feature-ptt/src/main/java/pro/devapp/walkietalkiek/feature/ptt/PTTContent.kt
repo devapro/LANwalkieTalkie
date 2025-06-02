@@ -70,6 +70,7 @@ fun PTTContent(
                         onClick = { /* Handle PTT button click */ }
                     )
                 }
+                VoiceDiagram()
             }
         }
     } else {
@@ -106,6 +107,8 @@ fun PTTContent(
                     onClick = { /* Handle PTT button click */ }
                 )
             }
+
+            VoiceDiagram()
         }
     }
 }
