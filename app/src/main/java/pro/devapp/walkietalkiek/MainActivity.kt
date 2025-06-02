@@ -8,27 +8,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowSize
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldLayout
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import androidx.window.core.layout.WindowHeightSizeClass
-import androidx.window.core.layout.WindowSizeClass
-import androidx.window.core.layout.WindowWidthSizeClass
 import org.koin.androidx.compose.getViewModel
 import pro.devapp.walkietalkiek.core.theme.DroidPTTTheme
 import pro.devapp.walkietalkiek.ui.MainViewMode
 import pro.devapp.walkietalkiek.ui.components.BottomTabs
 import pro.devapp.walkietalkiek.ui.components.RailTabs
 import pro.devapp.walkietalkiek.ui.components.RootContent
-
-private fun WindowSizeClass.isCompact() = windowWidthSizeClass == WindowWidthSizeClass.COMPACT ||
-        windowHeightSizeClass == WindowHeightSizeClass.COMPACT
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -43,19 +35,18 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                 ) { innerPadding ->
-                    val adaptiveInfo = currentWindowAdaptiveInfo()
                     val windowSize = with(LocalDensity.current) {
                         currentWindowSize().toSize().toDpSize()
                     }
 
-                    val navLayoutType = when {
-                        adaptiveInfo.windowPosture.isTabletop -> NavigationSuiteType.NavigationRail
-                        adaptiveInfo.windowSizeClass.isCompact() -> NavigationSuiteType.NavigationBar
-                        adaptiveInfo.windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.EXPANDED &&
-                                windowSize.width >= 1200.dp -> NavigationSuiteType.NavigationRail
-
-                        else -> NavigationSuiteType.NavigationRail
+                    val navLayoutType = if (windowSize.width > windowSize.height) {
+                        // Landscape mode
+                        NavigationSuiteType.NavigationRail
+                    } else {
+                        // Portrait mode
+                        NavigationSuiteType.NavigationBar
                     }
+
                     NavigationSuiteScaffoldLayout(
                         layoutType = navLayoutType,
                         navigationSuite = {

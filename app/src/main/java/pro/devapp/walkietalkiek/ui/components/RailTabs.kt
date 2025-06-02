@@ -1,5 +1,7 @@
 package pro.devapp.walkietalkiek.ui.components
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -17,7 +19,11 @@ fun RailTabs(
     screenState: MainScreenState,
     onAction: (MainScreenAction) -> Unit = {}
 ) {
-    NavigationRail(modifier = modifier) {
+    val windowInsets = WindowInsets.displayCutout
+    NavigationRail(
+        modifier = modifier,
+        windowInsets = windowInsets
+    ) {
         screenState.mainTabs.forEach {
             NavigationRailItem(
                 selected = it.screen == screenState.currentTab,
