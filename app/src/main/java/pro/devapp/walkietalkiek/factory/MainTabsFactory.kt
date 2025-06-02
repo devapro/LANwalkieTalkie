@@ -11,21 +11,21 @@ class MainTabsFactory {
             MainTabItem(
                 id = "ptt",
                 title = "PTT",
-                icon = R.drawable.ic_settings,
+                icon = R.drawable.ptt,
                 screen = MainTab.PTT
-            ),
-            MainTabItem(
-                id = "settings",
-                title = "Settings",
-                icon = R.drawable.ic_settings,
-                screen = MainTab.SETTINGS
             ),
             MainTabItem(
                 id = "chat",
                 title = "Chat",
-                icon = R.drawable.ic_settings,
+                icon = R.drawable.chat,
                 screen = MainTab.CHAT
-            )
+            ),
+            MainTabItem(
+                id = "settings",
+                title = "Settings",
+                icon = R.drawable.settings,
+                screen = MainTab.SETTINGS
+            ),
         )
     }
 }

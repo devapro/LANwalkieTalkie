@@ -27,7 +27,7 @@ fun BottomTabs(
         screenState.mainTabs.forEach {
             NavigationBarItem(
                 selected = it.screen == screenState.currentTab,
-                enabled = true,
+                alwaysShowLabel = true,
                 onClick = {
                     onAction(
                         MainScreenAction.ChangeScreen(
