@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.android.compose)
     implementation(libs.timber)
+    implementation(libs.accompanist.permissions)
 
     implementation(project(":core"))
     implementation(project(":feature-ptt"))

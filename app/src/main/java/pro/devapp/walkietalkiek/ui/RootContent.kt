@@ -1,5 +1,10 @@
 package pro.devapp.walkietalkiek.ui
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,8 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.toSize
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import org.koin.androidx.compose.getViewModel
 import pro.devapp.walkietalkiek.MainViewMode
 import pro.devapp.walkietalkiek.core.theme.DroidPTTTheme
@@ -22,10 +30,14 @@ import pro.devapp.walkietalkiek.ui.components.RailTabs
 import pro.devapp.walkietalkiek.ui.components.RequiredPermissionsNotification
 import pro.devapp.walkietalkiek.ui.components.TabsContent
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 internal fun RootContent() {
     val viewModel: MainViewMode = getViewModel()
     val state = viewModel.state.collectAsState()
+
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.onAction(MainScreenAction.InitApp)
@@ -86,7 +98,11 @@ internal fun RootContent() {
                         RequiredPermissionsNotification(
                             requiredPermissions = state.value.requiredPermissions,
                             onClick = {
-
+                                val intent =
+                                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = Uri.fromParts("package", context.packageName, null)
+                                    }
+                                context.startActivity(intent)
                             }
                         )
                     }
@@ -94,4 +110,17 @@ internal fun RootContent() {
             }
         }
     }
+
+    state.value.requiredPermissions.firstOrNull()?.let { permission ->
+        val permissionsState = rememberPermissionState(
+            permission
+        ) {
+            viewModel.onAction(MainScreenAction.CheckPermissions)
+        }
+        LaunchedEffect(permission) {
+            permissionsState.launchPermissionRequest()
+        }
+    }
+
+
 }
