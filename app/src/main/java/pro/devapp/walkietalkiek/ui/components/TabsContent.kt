@@ -11,7 +11,7 @@ import pro.devapp.walkietalkiek.model.MainTab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RootContent(
+fun TabsContent(
     modifier: Modifier = Modifier,
     state: MainScreenState,
     onAction: (MainScreenAction) -> Unit

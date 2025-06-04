@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.ui
+package pro.devapp.walkietalkiek
 
 import pro.devapp.walkietalkiek.core.mvi.MviViewModel
 import pro.devapp.walkietalkiek.model.MainScreenAction
