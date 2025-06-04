@@ -44,7 +44,7 @@ internal class CheckPermissionsReducer(
                     requiredPermissions = emptyList()
                 ),
                 action = null,
-                event = null
+                event = MainScreenEvent.StartService
             )
         }
     }

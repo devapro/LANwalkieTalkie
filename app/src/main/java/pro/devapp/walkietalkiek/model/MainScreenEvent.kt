@@ -4,4 +4,5 @@ sealed interface MainScreenEvent {
     data class RequestPermissions(
         val permissions: List<String>
     ) : MainScreenEvent
+    data object StartService : MainScreenEvent
 }

@@ -27,6 +27,7 @@ class WalkieService: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        notificationController.createNotificationChanel()
         ServiceCompat.startForeground(
             this,
             NotificationController.NOTIFICATION_ID,

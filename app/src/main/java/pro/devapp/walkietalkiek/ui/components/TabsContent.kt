@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import pro.devapp.walkietalkiek.feature.chat.ChatContent
 import pro.devapp.walkietalkiek.feature.ptt.PTTContent
+import pro.devapp.walkietalkiek.feature.settings.SettingsContent
 import pro.devapp.walkietalkiek.model.MainScreenAction
 import pro.devapp.walkietalkiek.model.MainScreenState
 import pro.devapp.walkietalkiek.model.MainTab
+import pro.devapp.walkietalkiek.ui.OffContent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,10 +27,13 @@ fun TabsContent(
                 PTTContent()
             }
             MainTab.SETTINGS -> {
-                // SettingsContent(modifier = modifier)
+                SettingsContent()
             }
             MainTab.CHAT -> {
-                // AboutContent(modifier = modifier)
+                ChatContent()
+            }
+            MainTab.OFF -> {
+                 OffContent()
             }
         }
     }
