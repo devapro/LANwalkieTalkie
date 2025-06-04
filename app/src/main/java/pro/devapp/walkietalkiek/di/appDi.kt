@@ -11,6 +11,7 @@ import pro.devapp.walkietalkiek.app.di.registerLegacyAppDi
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.factory.MainScreenInitStateFactory
 import pro.devapp.walkietalkiek.factory.MainTabsFactory
+import pro.devapp.walkietalkiek.feature.ptt.di.registerPttDi
 import pro.devapp.walkietalkiek.reducers.ChangeScreenReducer
 import pro.devapp.walkietalkiek.reducers.CheckPermissionsReducer
 import pro.devapp.walkietalkiek.reducers.InitAppReducer
@@ -22,6 +23,7 @@ val appModule: Module = module {
     viewModelsDi()
     reducersDi()
     registerLegacyAppDi()
+    registerPttDi()
 }
 
 private fun Module.coreDi() {

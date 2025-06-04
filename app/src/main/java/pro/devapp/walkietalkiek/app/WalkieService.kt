@@ -48,8 +48,7 @@ class WalkieService: Service() {
     }
 
     private fun setWakeLock() {
-        wakeLock =
-            (getSystemService(POWER_SERVICE) as PowerManager).run {
+        wakeLock = (getSystemService(POWER_SERVICE) as PowerManager).run {
                 newWakeLock(
                     PowerManager.PARTIAL_WAKE_LOCK,
                     "WalkieTalkyApp::ServiceWakelockTag"

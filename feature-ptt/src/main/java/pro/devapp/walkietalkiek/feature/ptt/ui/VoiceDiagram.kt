@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.feature.ptt
+package pro.devapp.walkietalkiek.feature.ptt.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

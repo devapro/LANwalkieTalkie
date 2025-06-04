@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.feature.ptt
+package pro.devapp.walkietalkiek.feature.ptt.ui
 
 import androidx.compose.animation.core.InfiniteRepeatableSpec
 import androidx.compose.animation.core.RepeatMode
@@ -30,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import pro.devapp.walkietalkiek.feature.ptt.R
 
 @Composable
 fun PTTButton(

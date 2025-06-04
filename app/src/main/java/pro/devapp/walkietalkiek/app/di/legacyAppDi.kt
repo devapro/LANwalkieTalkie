@@ -5,7 +5,7 @@ import org.koin.core.module.dsl.singleOf
 import pro.devapp.walkietalkiek.app.ChanelController
 import pro.devapp.walkietalkiek.app.SocketClient
 import pro.devapp.walkietalkiek.app.data.ConnectedDevicesRepository
-import pro.devapp.walkietalkiek.app.data.DeviceInfoRepository
+import pro.devapp.walkietalkiek.serivce.network.DeviceInfoRepository
 
 fun Module.registerLegacyAppDi() {
     singleOf(::ConnectedDevicesRepository)

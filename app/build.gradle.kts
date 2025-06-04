@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":feature-ptt"))
     implementation(project(":feature-chat"))
     implementation(project(":feature-settings"))
+    implementation(project(":serivce-network"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

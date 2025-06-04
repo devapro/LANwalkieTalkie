@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.app.model
+package pro.devapp.walkietalkiek.serivce.network
 
 data class DeviceInfoEntity(
     val deviceId: String,

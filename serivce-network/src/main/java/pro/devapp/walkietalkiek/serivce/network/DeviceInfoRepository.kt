@@ -1,10 +1,11 @@
-package pro.devapp.walkietalkiek.app.data
+package pro.devapp.walkietalkiek.serivce.network
 
+import android.Manifest
 import android.content.Context
-import android.content.Context.WIFI_SERVICE
+import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Build
-import pro.devapp.walkietalkiek.app.model.DeviceInfoEntity
+import androidx.annotation.RequiresPermission
 import java.math.BigInteger
 import java.net.InetAddress
 import java.net.UnknownHostException
@@ -21,8 +22,9 @@ class DeviceInfoRepository(private val context: Context) {
         )
     }
 
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     fun getCurrentIp(): String? {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         connectivityManager.activeNetwork?.let { network ->
             val linkProperties = connectivityManager.getLinkProperties(network)
             return linkProperties?.linkAddresses?.filter { it.address.isLoopbackAddress.not() }
@@ -30,7 +32,7 @@ class DeviceInfoRepository(private val context: Context) {
                     linkAddress.address.hostAddress
                 }
         }
-        val wifiManager = (context.applicationContext.getSystemService(WIFI_SERVICE) as WifiManager)
+        val wifiManager = (context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager)
         var ipAddress = wifiManager.connectionInfo.ipAddress
 
         if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {

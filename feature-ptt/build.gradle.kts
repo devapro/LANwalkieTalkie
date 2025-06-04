@@ -43,8 +43,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.adaptive.navigation.suite.android)
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
 
     implementation(project(":core"))
+    implementation(project(":serivce-network"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
