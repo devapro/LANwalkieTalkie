@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.serivce.network
+package pro.devapp.walkietalkiek.serivce.network.data
 
 import android.Manifest
 import android.content.Context
@@ -6,16 +6,18 @@ import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import androidx.annotation.RequiresPermission
+import pro.devapp.walkietalkiek.serivce.network.data.model.DeviceInfoModel
+import pro.devapp.walkietalkiek.serivce.network.getDeviceID
 import java.math.BigInteger
 import java.net.InetAddress
 import java.net.UnknownHostException
 import java.nio.ByteOrder
 
 class DeviceInfoRepository(private val context: Context) {
-    fun getCurrentDeviceInfo(): DeviceInfoEntity {
+    fun getCurrentDeviceInfo(): DeviceInfoModel {
         val defaultName =
             Build.MANUFACTURER + " " + Build.MODEL + " " + Build.VERSION.RELEASE + " " + Build.VERSION.SDK_INT
-        return DeviceInfoEntity(
+        return DeviceInfoModel(
             getDeviceID(context.contentResolver),
             defaultName,
             10

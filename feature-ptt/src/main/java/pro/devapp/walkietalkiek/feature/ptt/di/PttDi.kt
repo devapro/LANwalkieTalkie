@@ -1,9 +1,36 @@
 package pro.devapp.walkietalkiek.feature.ptt.di
 
+import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.factoryOf
+import pro.devapp.walkietalkiek.feature.ptt.PttActionProcessor
+import pro.devapp.walkietalkiek.feature.ptt.PttViewModel
+import pro.devapp.walkietalkiek.feature.ptt.factory.PttInitStateFactory
+import pro.devapp.walkietalkiek.feature.ptt.reducer.InitScreenReducer
 
 fun Module.registerPttDi() {
-    // This function is intentionally left empty.
-    // It serves as a placeholder for dependency injection registration related to the PTT feature.
-    // In a real application, you would typically register dependencies here using a DI framework.
+    reducersDi()
+    factoryDi()
+    viewModelsDi()
+}
+
+private fun Module.factoryDi() {
+    factoryOf(::PttInitStateFactory)
+}
+
+private fun Module.reducersDi() {
+    factoryOf(::InitScreenReducer)
+    factory {
+        PttActionProcessor(
+            reducers = setOf(
+                get(InitScreenReducer::class)
+            ),
+            initStateFactory = get(),
+            coroutineContextProvider = get()
+        )
+    }
+}
+
+private fun Module.viewModelsDi() {
+    viewModelOf(::PttViewModel)
 }

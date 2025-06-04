@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.androidx.material3.adaptive.navigation.suite.android)
     implementation(libs.koin.core)
     implementation(libs.koin.android)
+    implementation(libs.koin.android.compose)
 
     implementation(project(":core"))
     implementation(project(":serivce-network"))

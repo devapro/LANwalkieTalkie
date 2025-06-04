@@ -1,6 +1,6 @@
-package pro.devapp.walkietalkiek.app.model
+package pro.devapp.walkietalkiek.serivce.network.data.model
 
-data class ClientEntity(
+data class ClientModel(
     val hostAddress: String,
     val hostName: String = "",
     val isConnected: Boolean = false,

@@ -10,17 +10,29 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.adaptive.currentWindowSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
+import org.koin.compose.koinInject
+import pro.devapp.walkietalkiek.feature.ptt.PttViewModel
+import pro.devapp.walkietalkiek.feature.ptt.model.PttAction
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PTTContent(
     modifier: Modifier = Modifier
 ) {
+    val viewModel: PttViewModel = koinInject()
+    val state = viewModel.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.onAction(PttAction.InitScreen)
+    }
+
     val windowSize = with(LocalDensity.current) {
         currentWindowSize().toSize().toDpSize()
     }
@@ -52,8 +64,8 @@ fun PTTContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 MyDeviceInfo(
-                    isOnline = true,
-                    addressIp4 = "192.168.1.1",
+                    isOnline = state.value.isConnected,
+                    addressIp4 = state.value.myIP,
                     addressIp6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
                 )
                 Box(
@@ -66,7 +78,7 @@ fun PTTContent(
                         modifier = Modifier
                             .width(150.dp)
                             .padding(8.dp),
-                        isOnline = true,
+                        isOnline = state.value.isConnected,
                         onClick = { /* Handle PTT button click */ }
                     )
                 }
@@ -78,8 +90,8 @@ fun PTTContent(
         Column {
 
             MyDeviceInfo(
-                isOnline = true,
-                addressIp4 = "192.168.1.1",
+                isOnline = state.value.isConnected,
+                addressIp4 = state.value.myIP,
                 addressIp6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
             )
 

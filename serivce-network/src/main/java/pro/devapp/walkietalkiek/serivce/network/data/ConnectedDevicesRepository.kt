@@ -1,16 +1,16 @@
-package pro.devapp.walkietalkiek.app.data
+package pro.devapp.walkietalkiek.serivce.network.data
 
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import pro.devapp.walkietalkiek.app.model.ClientEntity
+import pro.devapp.walkietalkiek.serivce.network.data.model.ClientModel
 import java.util.Date
 
 /**
  * Store information about connected devices
  */
 class ConnectedDevicesRepository {
-    private val clients = HashMap<String, ClientEntity>()
-    private val clientsSubject = MutableSharedFlow<List<ClientEntity>>(
+    private val clients = HashMap<String, ClientModel>()
+    private val clientsSubject = MutableSharedFlow<List<ClientModel>>(
         replay = 1,
         extraBufferCapacity = 10
     )
@@ -21,7 +21,7 @@ class ConnectedDevicesRepository {
     }
 
     fun addOrUpdateHostStateToConnected(hostAddress: String) {
-        clients[hostAddress] = ClientEntity(
+        clients[hostAddress] = ClientModel(
             hostAddress,
             clients[hostAddress]?.hostName ?: "",
             true
@@ -30,7 +30,7 @@ class ConnectedDevicesRepository {
     }
 
     fun setHostDisconnected(hostAddress: String) {
-        clients[hostAddress] = ClientEntity(
+        clients[hostAddress] = ClientModel(
             hostAddress,
             clients[hostAddress]?.hostName ?: "",
             false
@@ -39,7 +39,7 @@ class ConnectedDevicesRepository {
     }
 
     fun addHostInfo(hostAddress: String, name: String) {
-        clients[hostAddress] = ClientEntity(
+        clients[hostAddress] = ClientModel(
             hostAddress,
             name,
             clients[hostAddress]?.isConnected ?: false
@@ -48,7 +48,7 @@ class ConnectedDevicesRepository {
     }
 
     fun storeDataReceivedTime(hostAddress: String) {
-        clients[hostAddress] = ClientEntity(
+        clients[hostAddress] = ClientModel(
             hostAddress,
             clients[hostAddress]?.hostName ?: "",
             clients[hostAddress]?.isConnected ?: true,
@@ -57,7 +57,7 @@ class ConnectedDevicesRepository {
         publishChanges()
     }
 
-    fun getConnectedDevicesList(): SharedFlow<List<ClientEntity>> {
+    fun getConnectedDevicesList(): SharedFlow<List<ClientModel>> {
         return clientsSubject
     }
 }

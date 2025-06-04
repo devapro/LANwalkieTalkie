@@ -7,9 +7,9 @@ import android.util.Base64
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
-import pro.devapp.walkietalkiek.app.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
-import pro.devapp.walkietalkiek.serivce.network.DeviceInfoRepository
+import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
+import pro.devapp.walkietalkiek.serivce.network.data.DeviceInfoRepository
 import timber.log.Timber
 import java.nio.ByteBuffer
 import java.util.concurrent.Executors
