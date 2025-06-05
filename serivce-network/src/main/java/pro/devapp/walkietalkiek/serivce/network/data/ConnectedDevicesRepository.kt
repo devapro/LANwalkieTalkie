@@ -1,6 +1,6 @@
 package pro.devapp.walkietalkiek.serivce.network.data
 
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import pro.devapp.walkietalkiek.serivce.network.data.model.ClientModel
 import java.util.Date
@@ -10,14 +10,14 @@ import java.util.Date
  */
 class ConnectedDevicesRepository {
     private val clients = HashMap<String, ClientModel>()
-    private val clientsSubject = MutableSharedFlow<List<ClientModel>>(
-        replay = 1,
-        extraBufferCapacity = 10
-    )
+
+    private val _clientsFlow = MutableStateFlow<List<ClientModel>>(emptyList())
+    val clientsSubject: SharedFlow<List<ClientModel>>
+        get() = _clientsFlow
 
     private fun publishChanges() {
         val clientsList = clients.map { it.value }.toList()
-        clientsSubject.tryEmit(clientsList)
+        _clientsFlow.tryEmit(clientsList)
     }
 
     fun addOrUpdateHostStateToConnected(hostAddress: String) {
@@ -42,7 +42,7 @@ class ConnectedDevicesRepository {
         clients[hostAddress] = ClientModel(
             hostAddress,
             name,
-            clients[hostAddress]?.isConnected ?: false
+            clients[hostAddress]?.isConnected == true
         )
         publishChanges()
     }
@@ -51,13 +51,9 @@ class ConnectedDevicesRepository {
         clients[hostAddress] = ClientModel(
             hostAddress,
             clients[hostAddress]?.hostName ?: "",
-            clients[hostAddress]?.isConnected ?: true,
+            clients[hostAddress]?.isConnected != false,
             Date().time
         )
         publishChanges()
-    }
-
-    fun getConnectedDevicesList(): SharedFlow<List<ClientModel>> {
-        return clientsSubject
     }
 }

@@ -17,7 +17,7 @@ internal class PttViewModel(
 
     fun startCollectingConnectedDevices() {
         viewModelScope.launch {
-            connectedDevicesRepository.getConnectedDevicesList().collect {
+            connectedDevicesRepository.clientsSubject.collect {
                 onAction(PttAction.ConnectedDevicesUpdated(it))
             }
         }

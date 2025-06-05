@@ -4,9 +4,6 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Base64
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.launch
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.serivce.network.data.DeviceInfoRepository
@@ -20,92 +17,25 @@ class ChanelController(
     private val deviceInfoRepository: DeviceInfoRepository,
     private val connectedDevicesRepository: ConnectedDevicesRepository,
     private val client: SocketClient,
-    private val coroutineContextProvider: CoroutineContextProvider
+    private val server: SocketServer,
+    private val coroutineContextProvider: CoroutineContextProvider,
+    private val resolver: Resolver
 ) {
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val discoveryListener = DiscoveryListener(this)
     private val registrationListener = RegistrationListener(this)
-    private val resolvedNamesCache = HashMap<String, String>()
 
     private var currentServiceName: String? = null
 
-    private val executor = Executors.newCachedThreadPool()
     private val executorPing = Executors.newSingleThreadScheduledExecutor()
-
-    private val jobs = mutableListOf<Job>()
-    private val coroutineScope = coroutineContextProvider.createScope(
-        coroutineContextProvider.io
-    )
-    val subjectAudioData = MutableSharedFlow<ByteArray>()
-
-    private val voicePlayer = VoicePlayer()
-
-    private val server = SocketServer { hostAddress, data ->
-        if (data.size > 20) {
-            voicePlayer.play(data)
-            subjectAudioData.tryEmit(data)
-            Timber.i("message: audio ${data.size} from $hostAddress")
-        } else {
-            val message = String(data).trim()
-            Timber.i("message: $message from $hostAddress")
-        }
-        connectedDevicesRepository.storeDataReceivedTime(hostAddress)
-    }
-        .apply {
-            coroutineScope.launch {
-                clientConnectionSubject.collect { address ->
-                    client.addClient(address, false)
-                    connectedDevicesRepository.addOrUpdateHostStateToConnected(address.address.hostAddress)
-                }
-            }.also {
-                jobs.add(it)
-            }
-            coroutineScope.launch {
-                clientDisconnectionSubject.collect { address ->
-                    client.removeClient(address.address.hostAddress)
-                    connectedDevicesRepository.setHostDisconnected(address.address.hostAddress)
-                }
-            }.also {
-                jobs.add(it)
-            }
-        }
-
-    private val resolver =
-        Resolver(nsdManager) { inetSocketAddress, nsdServiceInfo ->
-            Timber.i("Resolve: ${nsdServiceInfo.serviceName}")
-            resolvedNamesCache[nsdServiceInfo.serviceName] = inetSocketAddress.address.hostAddress
-            connectedDevicesRepository.addHostInfo(
-                inetSocketAddress.address.hostAddress,
-                nsdServiceInfo.serviceName
-            )
-            client.addClient(inetSocketAddress)
-        }
 
     companion object {
         const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */
     }
 
     fun startDiscovery() {
-        coroutineScope.launch {
-            client.clientConnectionSubject.collect {
-                connectedDevicesRepository.addOrUpdateHostStateToConnected(it)
-            }
-        }.also {
-            jobs.add(it)
-        }
-        coroutineScope.launch {
-            client.clientDisconnectionSubject.collect {
-                connectedDevicesRepository.setHostDisconnected(it)
-            }
-        }.also {
-            jobs.add(it)
-        }
-        nsdManager.apply {
-            val port = server.initServer()
-            registerService(port)
-        }
-        voicePlayer.create()
-        voicePlayer.startPlay()
+        val port = server.initServer()
+        registerNsdService(port)
     }
 
     fun stopDiscovery() {
@@ -113,16 +43,9 @@ class ChanelController(
             stopServiceDiscovery(discoveryListener)
             unregisterService(registrationListener)
         }
-        jobs.forEach {
-            if (it.isActive) {
-                it.cancel()
-            }
-        }
-        executor.shutdown()
         executorPing.shutdown()
         client.stop()
         server.stop()
-        voicePlayer.stopPlay()
     }
 
     fun onServiceRegister() {
@@ -133,7 +56,7 @@ class ChanelController(
         client.sendMessage(byteBuffer)
     }
 
-    private fun registerService(port: Int) {
+    private fun registerNsdService(port: Int) {
         Timber.i("registerService")
         val result = deviceInfoRepository.getCurrentDeviceInfo()
         result.apply {
@@ -176,17 +99,23 @@ class ChanelController(
             Timber.i("onServiceFound: NAME NOT SET")
             return
         }
-        resolver.resolve(serviceInfo)
+
+        resolver.resolve(serviceInfo) { inetSocketAddress, nsdServiceInfo ->
+            Timber.i("Resolve: ${nsdServiceInfo.serviceName}")
+            connectedDevicesRepository.addHostInfo(
+                inetSocketAddress.address.hostAddress,
+                nsdServiceInfo.serviceName
+            )
+            client.addClient(inetSocketAddress)
+        }
     }
 
     fun onServiceLost(nsdServiceInfo: NsdServiceInfo) {
         Timber.i("onServiceLost: $nsdServiceInfo")
+        connectedDevicesRepository.setHostDisconnected(nsdServiceInfo.host.hostAddress)
         if (nsdServiceInfo.serviceName == currentServiceName) {
             Timber.i("onServiceLost: SELF")
             return
-        }
-        resolvedNamesCache[nsdServiceInfo.serviceName]?.let {
-            client.removeClient(it)
         }
     }
 }

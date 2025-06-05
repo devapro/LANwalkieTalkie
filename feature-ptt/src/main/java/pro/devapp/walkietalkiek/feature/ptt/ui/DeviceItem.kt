@@ -20,6 +20,11 @@ internal fun DeviceItem(
     isOnline: Boolean,
     address: String
 ) {
+    val color = if (isOnline) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.5f)
+    }
     Row(
         modifier = modifier.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -29,7 +34,7 @@ internal fun DeviceItem(
                 .padding(end = 8.dp)
                 .size(16.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.scrim,
+                    color = color,
                     shape = CircleShape
                 )
         )

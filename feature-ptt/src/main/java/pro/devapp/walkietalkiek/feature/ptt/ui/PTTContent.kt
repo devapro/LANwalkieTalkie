@@ -31,6 +31,7 @@ fun PTTContent(
 
     LaunchedEffect(Unit) {
         viewModel.onAction(PttAction.InitScreen)
+        viewModel.startCollectingConnectedDevices()
     }
 
     val windowSize = with(LocalDensity.current) {

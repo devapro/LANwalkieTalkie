@@ -1,6 +1,6 @@
 package pro.devapp.walkietalkiek.app
 
-import kotlinx.coroutines.flow.MutableSharedFlow
+import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import timber.log.Timber
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -15,11 +15,14 @@ import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
 class SocketServer(
-    private val receiverListener: (hostAddress: String, bytes: ByteArray) -> Unit
+    private val connectedDevicesRepository: ConnectedDevicesRepository,
+    private val clientSocket: SocketClient
 ) : IServer {
     companion object {
         const val SERVER_PORT = 9700
     }
+
+    private val voicePlayer = VoicePlayer()
 
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceRead = Executors.newCachedThreadPool()
@@ -31,9 +34,6 @@ class SocketServer(
     private val outputQueueMap = ConcurrentHashMap<String, LinkedBlockingDeque<ByteBuffer>>()
 
     private var socket: ServerSocket? = null
-
-    val clientConnectionSubject = MutableSharedFlow<InetSocketAddress>()
-    val clientDisconnectionSubject = MutableSharedFlow<InetSocketAddress>()
 
     override fun initServer(): Int {
         if (socket != null && socket?.isClosed == false) {
@@ -50,18 +50,19 @@ class SocketServer(
                     client.tcpNoDelay = true
                     val hostAddress = client.inetAddress.hostAddress
                     outputQueueMap[hostAddress] = LinkedBlockingDeque()
-                    clientConnectionSubject.tryEmit(
-                        InetSocketAddress(
-                            hostAddress,
-                            client.port
-                        )
-                    )
+                    clientSocket.addClient(InetSocketAddress(
+                        hostAddress,
+                        client.port
+                    ), false)
+                    connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
                     handleConnection(client)
                 } catch (e: Exception) {
                     Timber.w(e)
                 }
             }, 100, 1000, TimeUnit.MILLISECONDS)
         }
+        voicePlayer.create()
+        voicePlayer.startPlay()
         return SERVER_PORT
     }
 
@@ -123,19 +124,21 @@ class SocketServer(
         val hostAddress = client.inetAddress.hostAddress
         client.close()
         outputQueueMap.remove(hostAddress)
-        clientDisconnectionSubject.tryEmit(
-            InetSocketAddress(
-                hostAddress,
-                client.port
-            )
-        )
+        clientSocket.removeClient(hostAddress)
+        connectedDevicesRepository.setHostDisconnected(hostAddress)
     }
 
     private fun read(byteArray: ByteArray, readCount: Int, hostAddress: String) {
-        val rspData = ByteArray(readCount)
-        System.arraycopy(byteArray, 0, rspData, 0, readCount)
-        //TODO check it
-        receiverListener(hostAddress, rspData)
+        val data = ByteArray(readCount)
+        System.arraycopy(byteArray, 0, data, 0, readCount)
+        if (data.size > 20) {
+            voicePlayer.play(data)
+            Timber.i("message: audio ${data.size} from $hostAddress")
+        } else {
+            val message = String(data).trim()
+            Timber.i("message: $message from $hostAddress")
+        }
+        connectedDevicesRepository.storeDataReceivedTime(hostAddress)
 //        executorServiceRead.submit {
 //            receiverListener(hostAddress, rspData)
 //        }
@@ -164,6 +167,7 @@ class SocketServer(
         socket?.apply {
             close()
         }
+        voicePlayer.stopPlay()
         executorService.shutdown()
         acceptConnectionExecutor.shutdown()
         executorServiceRead.shutdown()

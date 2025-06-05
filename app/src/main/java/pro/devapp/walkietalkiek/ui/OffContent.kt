@@ -1,5 +1,6 @@
 package pro.devapp.walkietalkiek.ui
 
+import android.content.Intent
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import pro.devapp.walkietalkiek.app.WalkieService
 
 @Composable
 internal fun OffContent() {
@@ -20,6 +22,8 @@ internal fun OffContent() {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
+                val serviceIntent = Intent(activity, WalkieService::class.java)
+                activity?.stopService(serviceIntent)
                 activity?.finishAndRemoveTask()
             }
         ) {

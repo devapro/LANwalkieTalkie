@@ -1,59 +1,43 @@
 package pro.devapp.walkietalkiek.app
 
+import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import kotlinx.coroutines.launch
+import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import timber.log.Timber
 import java.net.InetSocketAddress
-import java.util.concurrent.LinkedBlockingDeque
-import java.util.concurrent.atomic.AtomicInteger
 
 class Resolver(
-    private val nsdManager: NsdManager,
-    private val resultListener: (socketAddress: InetSocketAddress, nsdServiceInfo: NsdServiceInfo) -> Unit
+    private val context: Context,
+    private val coroutineContextProvider: CoroutineContextProvider
 ) {
-    private val servicesResolverQueue = LinkedBlockingDeque<NsdServiceInfo>()
-    private val isResolverInProgress = AtomicInteger(0)
+    private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
 
+    private val scope = coroutineContextProvider.createScope(
+        coroutineContextProvider.io
+    )
 
-    fun resolve(nsdServiceInfo: NsdServiceInfo) {
+    fun resolve(
+        nsdInfo: NsdServiceInfo,
+        resultListener: (socketAddress: InetSocketAddress, nsdServiceInfo: NsdServiceInfo) -> Unit
+        ) {
         Timber.i("resolve")
-        servicesResolverQueue.add(nsdServiceInfo)
-        resolveNext()
-    }
+        scope.launch {
+            Timber.i("resolveNext $nsdInfo")
+            nsdManager.resolveService(nsdInfo, object : NsdManager.ResolveListener {
+                override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+                    Timber.i("onResolveFailed")
+                }
 
-    private fun resolveNext() {
-        Timber.i("resolveNext")
-        if (isResolverInProgress.compareAndSet(0, 1)) {
-            Timber.i("resolveNext start")
-            if (servicesResolverQueue.isNotEmpty()) {
-                val nsdInfo = servicesResolverQueue.pollFirst()
-                Timber.i("resolveNext $nsdInfo")
-                nsdManager.resolveService(nsdInfo, object : NsdManager.ResolveListener {
-                    override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                        isResolverInProgress.set(0)
-                        Timber.i("onResolveFailed")
-                        resolveNext()
+                override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+                    val socketAddress = InetSocketAddress(serviceInfo.host, serviceInfo.port)
+                    Timber.i("onServiceResolved: $socketAddress")
+                    if (!socketAddress.address.isMulticastAddress) {
+                        resultListener(socketAddress, serviceInfo)
                     }
-
-                    override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
-                        isResolverInProgress.set(0)
-                        val socketAddress = InetSocketAddress(serviceInfo.host, serviceInfo.port)
-                        Timber.i("onServiceResolved: $socketAddress")
-                        if (!socketAddress.address.isMulticastAddress) {
-                            resultListener(socketAddress, serviceInfo)
-                        }
-                        resolveNext()
-                    }
-                })
-            } else {
-                isResolverInProgress.set(0)
-            }
-        } else {
-            val count = isResolverInProgress.getAndAdd(1)
-            Timber.w("resolveNext in progress $count")
-            if (count > 3) {
-                isResolverInProgress.set(0)
-            }
+                }
+            })
         }
     }
 }

@@ -1,6 +1,6 @@
 package pro.devapp.walkietalkiek.app
 
-import kotlinx.coroutines.flow.MutableSharedFlow
+import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import timber.log.Timber
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -14,16 +14,15 @@ import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
-class SocketClient : IClient {
+class SocketClient (
+    private val connectedDevicesRepository: ConnectedDevicesRepository
+): IClient {
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceClients = Executors.newCachedThreadPool()
     private val executorServiceReader = Executors.newFixedThreadPool(1)
     private val reconnectTimer = Executors.newSingleThreadScheduledExecutor()
     private val sockets = ConcurrentHashMap<String, Connection>()
     private val lock = Object()
-
-    val clientConnectionSubject = MutableSharedFlow<String>()
-    val clientDisconnectionSubject = MutableSharedFlow<String>()
 
     /**
      * Data for sending
@@ -53,7 +52,8 @@ class SocketClient : IClient {
                             socket.receiveBufferSize = 8192 * 2
                             sockets[hostAddress] = Connection(socket, null)
                             outputQueueMap[hostAddress] = LinkedBlockingDeque()
-                            clientConnectionSubject.tryEmit(hostAddress)
+                            Timber.i("AddClient $hostAddress")
+                            connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
                             handleConnection(hostAddress)
                         } catch (e: Exception) {
                             Timber.w(e)
@@ -66,6 +66,7 @@ class SocketClient : IClient {
     }
 
     override fun removeClient(hostAddress: String) {
+        Timber.i("removeClient $hostAddress")
         sockets[hostAddress]?.apply {
             val socketAddress = InetSocketAddress(
                 hostAddress,
@@ -75,7 +76,7 @@ class SocketClient : IClient {
             socket.close()
             sockets.remove(hostAddress)
             Timber.i("removeClient $hostAddress")
-            clientDisconnectionSubject.tryEmit(hostAddress)
+            connectedDevicesRepository.setHostDisconnected(hostAddress)
             // try reconnect
             reconnectTimer.schedule({ addClient(socketAddress) }, 1000, TimeUnit.MILLISECONDS)
         }
