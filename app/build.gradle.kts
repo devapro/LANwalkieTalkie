@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     implementation(project(":core"))
+    implementation(project(":core-ui"))
     implementation(project(":feature-ptt"))
     implementation(project(":feature-chat"))
     implementation(project(":feature-settings"))

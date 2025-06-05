@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 rootProject.name = "Droid PTT"
 include(":app")
 include(":core")
+include(":core-ui")
 include(":feature-ptt")
 include(":feature-chat")
 include(":feature-settings")

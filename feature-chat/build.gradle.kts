@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation(project(":core"))
+    implementation(project(":core-ui"))
     implementation(project(":serivce-network"))
 
     testImplementation(libs.junit)

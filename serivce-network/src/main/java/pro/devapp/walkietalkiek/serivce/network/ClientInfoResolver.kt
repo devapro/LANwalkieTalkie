@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.app
+package pro.devapp.walkietalkiek.serivce.network
 
 import android.content.Context
 import android.net.nsd.NsdManager
@@ -8,7 +8,7 @@ import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import timber.log.Timber
 import java.net.InetSocketAddress
 
-class Resolver(
+class ClientInfoResolver(
     private val context: Context,
     private val coroutineContextProvider: CoroutineContextProvider
 ) {

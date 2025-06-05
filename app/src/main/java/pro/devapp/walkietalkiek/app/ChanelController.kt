@@ -5,6 +5,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Base64
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
+import pro.devapp.walkietalkiek.serivce.network.ClientInfoResolver
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.serivce.network.data.DeviceInfoRepository
 import timber.log.Timber
@@ -19,7 +20,7 @@ class ChanelController(
     private val client: SocketClient,
     private val server: SocketServer,
     private val coroutineContextProvider: CoroutineContextProvider,
-    private val resolver: Resolver
+    private val clientInfoResolver: ClientInfoResolver
 ) {
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val discoveryListener = DiscoveryListener(this)
@@ -99,7 +100,7 @@ class ChanelController(
             return
         }
 
-        resolver.resolve(serviceInfo) { inetSocketAddress, nsdServiceInfo ->
+        clientInfoResolver.resolve(serviceInfo) { inetSocketAddress, nsdServiceInfo ->
             Timber.i("Resolve: ${nsdServiceInfo.serviceName}")
             connectedDevicesRepository.addHostInfo(
                 inetSocketAddress.address.hostAddress,

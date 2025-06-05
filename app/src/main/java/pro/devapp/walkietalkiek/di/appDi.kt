@@ -16,6 +16,7 @@ import pro.devapp.walkietalkiek.reducers.ChangeScreenReducer
 import pro.devapp.walkietalkiek.reducers.CheckPermissionsReducer
 import pro.devapp.walkietalkiek.reducers.InitAppReducer
 import pro.devapp.walkietalkiek.reducers.MainActionProcessor
+import pro.devapp.walkietalkiek.serivce.network.di.registerServiceNetworkDi
 
 val appModule: Module = module {
     coreDi()
@@ -24,6 +25,7 @@ val appModule: Module = module {
     reducersDi()
     registerLegacyAppDi()
     registerPttDi()
+    registerServiceNetworkDi()
 }
 
 private fun Module.coreDi() {
