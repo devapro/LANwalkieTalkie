@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.app
+package pro.devapp.walkietalkiek.serivce.network
 
 import android.content.Context
 import android.net.nsd.NsdManager
@@ -10,7 +10,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
-import pro.devapp.walkietalkiek.serivce.network.ClientInfoResolver
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.serivce.network.data.DeviceInfoRepository
 import timber.log.Timber
@@ -25,7 +24,8 @@ class ChanelController(
     private val client: SocketClient,
     private val server: SocketServer,
     private val coroutineContextProvider: CoroutineContextProvider,
-    private val clientInfoResolver: ClientInfoResolver
+    private val clientInfoResolver: ClientInfoResolver,
+    private val voiceRecorder: VoiceRecorder
 ) {
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val discoveryListener = DiscoveryListener(this)
@@ -44,6 +44,8 @@ class ChanelController(
     }
 
     fun stopDiscovery() {
+        voiceRecorder.stopRecord()
+        voiceRecorder.destroy() // Move to service??
         nsdManager.apply {
             stopServiceDiscovery(discoveryListener)
             unregisterService(registrationListener)
@@ -57,12 +59,12 @@ class ChanelController(
         nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
     }
 
-    fun sendMessage(byteBuffer: ByteBuffer) {
-        client.sendMessage(byteBuffer)
-    }
+//    fun sendMessage(byteBuffer: ByteBuffer) {
+//        client.sendMessage(byteBuffer)
+//    }
 
     private fun registerNsdService(port: Int) {
-        Timber.i("registerService")
+        Timber.Forest.i("registerService")
         val result = deviceInfoRepository.getCurrentDeviceInfo()
         result.apply {
             // Android NSD implementation is very unstable when services
@@ -77,7 +79,7 @@ class ChanelController(
             serviceInfo.serviceName = serviceName
             currentServiceName = serviceName
             serviceInfo.port = port
-            Timber.i("try register $name: $serviceInfo")
+            Timber.Forest.i("try register $name: $serviceInfo")
             nsdManager.registerService(
                 serviceInfo,
                 NsdManager.PROTOCOL_DNS_SD,
@@ -99,18 +101,18 @@ class ChanelController(
 
     fun onServiceFound(serviceInfo: NsdServiceInfo) {
         // check for self add to list
-        Timber.i("onServiceFound: ${serviceInfo.serviceName} current: $currentServiceName")
+        Timber.Forest.i("onServiceFound: ${serviceInfo.serviceName} current: $currentServiceName")
         if (serviceInfo.serviceName == currentServiceName) {
-            Timber.i("onServiceFound: SELF")
+            Timber.Forest.i("onServiceFound: SELF")
             return
         }
         if (currentServiceName.isNullOrEmpty()) {
-            Timber.i("onServiceFound: NAME NOT SET")
+            Timber.Forest.i("onServiceFound: NAME NOT SET")
             return
         }
 
         clientInfoResolver.resolve(serviceInfo) { inetSocketAddress, nsdServiceInfo ->
-            Timber.i("Resolve: ${nsdServiceInfo.serviceName}")
+            Timber.Forest.i("Resolve: ${nsdServiceInfo.serviceName}")
             connectedDevicesRepository.addHostInfo(
                 inetSocketAddress.address.hostAddress,
                 nsdServiceInfo.serviceName
@@ -120,10 +122,10 @@ class ChanelController(
     }
 
     fun onServiceLost(nsdServiceInfo: NsdServiceInfo) {
-        Timber.i("onServiceLost: $nsdServiceInfo")
+        Timber.Forest.i("onServiceLost: $nsdServiceInfo")
         connectedDevicesRepository.setHostDisconnected(nsdServiceInfo.host.hostAddress)
         if (nsdServiceInfo.serviceName == currentServiceName) {
-            Timber.i("onServiceLost: SELF")
+            Timber.Forest.i("onServiceLost: SELF")
             return
         }
     }

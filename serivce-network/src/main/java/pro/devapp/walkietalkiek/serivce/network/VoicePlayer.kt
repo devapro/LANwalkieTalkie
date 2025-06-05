@@ -1,11 +1,18 @@
-package pro.devapp.walkietalkiek.app
+package pro.devapp.walkietalkiek.serivce.network
 
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioTrack
-import android.media.AudioTrack.PLAYSTATE_STOPPED
+import android.os.Build
 import timber.log.Timber
+import java.lang.Byte
+import java.lang.Short
+import kotlin.ByteArray
+import kotlin.Int
+import kotlin.apply
+import kotlin.arrayOf
+import kotlin.let
 
 class VoicePlayer {
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
@@ -20,10 +27,10 @@ class VoicePlayer {
                 AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_16BIT
             )
-            bufferSize = sampleRate * (java.lang.Short.SIZE / java.lang.Byte.SIZE) * 4
+            bufferSize = sampleRate * (Short.SIZE / Byte.SIZE) * 4
             if (bufferSize < minBufferSize) bufferSize = minBufferSize
             audioTrack =
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     AudioTrack(
                         AudioManager.STREAM_MUSIC,
                         sampleRate,
@@ -50,13 +57,13 @@ class VoicePlayer {
     }
 
     fun play(bytes: ByteArray) {
-        Timber.i("play ${bytes.size} - ${bytes[0]} ${bytes[1]}")
-        if (audioTrack?.playState == PLAYSTATE_STOPPED) {
-            Timber.w("PLAYER STOPPED!!!")
+        Timber.Forest.i("play ${bytes.size} - ${bytes[0]} ${bytes[1]}")
+        if (audioTrack?.playState == AudioTrack.PLAYSTATE_STOPPED) {
+            Timber.Forest.w("PLAYER STOPPED!!!")
         }
         audioTrack?.apply {
             write(bytes, 0, bytes.size)
-            Timber.i("write ${bytes.size}")
+            Timber.Forest.i("write ${bytes.size}")
 //            if (frame++ == 0){
 //                audioTrack?.play()
 //                audioTrack?.stop()

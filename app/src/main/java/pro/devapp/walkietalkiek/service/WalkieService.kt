@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.app
+package pro.devapp.walkietalkiek.service
 
 import android.app.Service
 import android.content.Intent
@@ -8,6 +8,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.ServiceCompat
 import org.koin.android.ext.android.inject
+import pro.devapp.walkietalkiek.serivce.network.ChanelController
 
 class WalkieService: Service() {
 

@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.app
+package pro.devapp.walkietalkiek.serivce.network
 
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import timber.log.Timber
@@ -56,12 +56,12 @@ class SocketClient (
                             socket.receiveBufferSize = 8192 * 2
                             sockets[hostAddress] = Connection(socket, null)
                             outputQueueMap[hostAddress] = LinkedBlockingDeque()
-                            Timber.i("AddClient $hostAddress")
+                            Timber.Forest.i("AddClient $hostAddress")
                             connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
                             handleConnection(hostAddress)
                         } catch (e: Exception) {
-                            Timber.w(e)
-                            Timber.i("connection error ${socketAddress.address.hostAddress}")
+                            Timber.Forest.w(e)
+                            Timber.Forest.i("connection error ${socketAddress.address.hostAddress}")
                             connectedDevicesRepository.setHostDisconnected(socketAddress.address.hostAddress)
                         }
                     }
@@ -71,7 +71,7 @@ class SocketClient (
     }
 
     fun removeClient(hostAddress: String) {
-        Timber.i("removeClient $hostAddress")
+        Timber.Forest.i("removeClient $hostAddress")
         sockets[hostAddress]?.apply {
             val socketAddress = InetSocketAddress(
                 hostAddress,
@@ -80,7 +80,7 @@ class SocketClient (
             future?.cancel(true)
             socket.close()
             sockets.remove(hostAddress)
-            Timber.i("removeClient $hostAddress")
+            Timber.Forest.i("removeClient $hostAddress")
             connectedDevicesRepository.setHostDisconnected(hostAddress)
             // try reconnect
             reconnectTimer.schedule({ addClient(socketAddress, true) }, 1000, TimeUnit.MILLISECONDS)
@@ -104,7 +104,7 @@ class SocketClient (
             val readingFuture = executorServiceClients.submit {
                 val dataInput = DataInputStream(it.socket.getInputStream())
                 val byteArray = ByteArray(8192 * 8)
-                Timber.i("Started reading $hostAddress")
+                Timber.Forest.i("Started reading $hostAddress")
                 try {
                     while (!it.socket.isClosed && !it.socket.isInputShutdown) {
                         val readCount = dataInput.read(byteArray)
@@ -114,7 +114,7 @@ class SocketClient (
                         Arrays.fill(byteArray, 0)
                     }
                 } catch (e: Exception) {
-                    Timber.w(e)
+                    Timber.Forest.w(e)
                 } finally {
 
                 }
@@ -138,27 +138,27 @@ class SocketClient (
                                 buf?.let { byteArray ->
                                     outputStream.write(byteArray.array())
                                     outputStream.flush()
-                                    Timber.i("send data to ${it.socket.inetAddress.hostAddress}")
+                                    Timber.Forest.i("send data to ${it.socket.inetAddress.hostAddress}")
                                 }
                                 errorCounter = 0
                             } catch (e: Exception) {
                                 errorCounter++
                                 if (errorCounter > 3) {
-                                    Timber.d("errorCounter $errorCounter")
+                                    Timber.Forest.d("errorCounter $errorCounter")
                                     throw e
                                 }
                             }
                         }
                     } catch (e: Exception) {
-                        Timber.w(e)
+                        Timber.Forest.w(e)
                     } finally {
                         readingFuture.cancel(true)
                         removeClient(hostAddress)
-                        Timber.i("remove $hostAddress")
+                        Timber.Forest.i("remove $hostAddress")
                     }
                 } else {
                     removeClient(hostAddress)
-                    Timber.i("remove $hostAddress")
+                    Timber.Forest.i("remove $hostAddress")
                 }
             }
         }

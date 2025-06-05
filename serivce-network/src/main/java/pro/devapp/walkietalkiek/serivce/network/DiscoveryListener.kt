@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.app
+package pro.devapp.walkietalkiek.serivce.network
 
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
@@ -12,27 +12,27 @@ class DiscoveryListener(
         try {
             val ss = serviceInfo.serviceName.split(":").toTypedArray()
             val channelName = String(Base64.decode(ss[0], 0))
-            Timber.i("DiscoveryListener: $channelName: $serviceInfo")
+            Timber.Forest.i("DiscoveryListener: $channelName: $serviceInfo")
             chanelController.onServiceFound(serviceInfo)
         } catch (e: IllegalArgumentException) {
-            Timber.w(e)
+            Timber.Forest.w(e)
         }
     }
 
     override fun onStopDiscoveryFailed(serviceType: String?, errorCode: Int) {
-        Timber.i("Stop discovery failed: $errorCode")
+        Timber.Forest.i("Stop discovery failed: $errorCode")
     }
 
     override fun onStartDiscoveryFailed(serviceType: String?, errorCode: Int) {
-        Timber.i("Start discovery failed: $errorCode")
+        Timber.Forest.i("Start discovery failed: $errorCode")
     }
 
     override fun onDiscoveryStarted(serviceType: String?) {
-        Timber.i("Discovery started")
+        Timber.Forest.i("Discovery started")
     }
 
     override fun onDiscoveryStopped(serviceType: String?) {
-        Timber.i("Discovery stopped")
+        Timber.Forest.i("Discovery stopped")
     }
 
     override fun onServiceLost(serviceInfo: NsdServiceInfo) {
@@ -41,10 +41,10 @@ class DiscoveryListener(
                 serviceInfo.serviceName.split(":")
                     .toTypedArray()
             val channelName = String(Base64.decode(ss[0], 0))
-            Timber.i("onServiceLost: $channelName: $serviceInfo")
+            Timber.Forest.i("onServiceLost: $channelName: $serviceInfo")
             chanelController.onServiceLost(serviceInfo)
         } catch (e: IllegalArgumentException) {
-            Timber.w(e)
+            Timber.Forest.w(e)
         }
     }
 }

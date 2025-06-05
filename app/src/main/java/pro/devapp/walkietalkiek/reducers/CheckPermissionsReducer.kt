@@ -1,18 +1,22 @@
 package pro.devapp.walkietalkiek.reducers
 
 import android.Manifest
+import androidx.annotation.RequiresPermission
 import pro.devapp.walkietalkiek.PermissionState
 import pro.devapp.walkietalkiek.core.mvi.Reducer
 import pro.devapp.walkietalkiek.model.MainScreenAction
 import pro.devapp.walkietalkiek.model.MainScreenEvent
 import pro.devapp.walkietalkiek.model.MainScreenState
+import pro.devapp.walkietalkiek.serivce.network.VoiceRecorder
 
 internal class CheckPermissionsReducer(
-    private val permissionState: PermissionState
+    private val permissionState: PermissionState,
+    private val voiceRecorder: VoiceRecorder
 ): Reducer<MainScreenAction.CheckPermissions, MainScreenState, MainScreenAction, MainScreenEvent> {
 
     override val actionClass = MainScreenAction.CheckPermissions::class
 
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     override suspend fun reduce(
         action: MainScreenAction.CheckPermissions,
         getState: () -> MainScreenState
@@ -39,6 +43,7 @@ internal class CheckPermissionsReducer(
                 )
             )
         } else {
+            voiceRecorder.create()
             Reducer.Result(
                 state = getState().copy(
                     requiredPermissions = emptyList()

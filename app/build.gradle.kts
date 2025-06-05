@@ -62,6 +62,7 @@ dependencies {
     implementation(project(":feature-chat"))
     implementation(project(":feature-settings"))
     implementation(project(":serivce-network"))
+    implementation(project(":service-voice"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

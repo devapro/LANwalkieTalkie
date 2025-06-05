@@ -76,7 +76,12 @@ fun PTTContent(
                             .width(150.dp)
                             .padding(8.dp),
                         isOnline = state.value.isConnected,
-                        onPress = { /* Handle PTT button click */ }
+                        onPress = {
+                            viewModel.onAction(PttAction.StartRecording)
+                        },
+                        onRelease = {
+                            viewModel.onAction(PttAction.StopRecording)
+                        }
                     )
                 }
                 VoiceDiagram()
@@ -109,7 +114,12 @@ fun PTTContent(
                         .width(150.dp)
                         .padding(8.dp),
                     isOnline = state.value.isConnected,
-                    onPress = { /* Handle PTT button click */ }
+                    onPress = {
+                        viewModel.onAction(PttAction.StartRecording)
+                    },
+                    onRelease = {
+                        viewModel.onAction(PttAction.StopRecording)
+                    }
                 )
             }
 

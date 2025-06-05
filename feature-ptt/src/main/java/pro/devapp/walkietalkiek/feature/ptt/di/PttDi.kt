@@ -8,6 +8,8 @@ import pro.devapp.walkietalkiek.feature.ptt.PttViewModel
 import pro.devapp.walkietalkiek.feature.ptt.factory.PttInitStateFactory
 import pro.devapp.walkietalkiek.feature.ptt.reducer.ConnectedDevicesUpdatedReducer
 import pro.devapp.walkietalkiek.feature.ptt.reducer.InitScreenReducer
+import pro.devapp.walkietalkiek.feature.ptt.reducer.StartRecordingReducer
+import pro.devapp.walkietalkiek.feature.ptt.reducer.StopRecordingReducer
 
 fun Module.registerPttDi() {
     reducersDi()
@@ -22,11 +24,15 @@ private fun Module.factoryDi() {
 private fun Module.reducersDi() {
     factoryOf(::InitScreenReducer)
     factoryOf(::ConnectedDevicesUpdatedReducer)
+    factoryOf(::StartRecordingReducer)
+    factoryOf(::StopRecordingReducer)
     factory {
         PttActionProcessor(
             reducers = setOf(
                 get(InitScreenReducer::class),
-                get(ConnectedDevicesUpdatedReducer::class)
+                get(ConnectedDevicesUpdatedReducer::class),
+                get(StartRecordingReducer::class),
+                get(StopRecordingReducer::class)
             ),
             initStateFactory = get(),
             coroutineContextProvider = get()

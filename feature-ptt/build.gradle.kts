@@ -50,6 +50,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":core-ui"))
     implementation(project(":serivce-network"))
+    implementation(project(":service-voice"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

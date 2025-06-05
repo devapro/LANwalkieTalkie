@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.app
+package pro.devapp.walkietalkiek.serivce.network
 
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
@@ -7,19 +7,19 @@ import timber.log.Timber
 class RegistrationListener(private val chanelController: ChanelController) :
     NsdManager.RegistrationListener {
     override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-        Timber.e("onRegistrationFailed: $serviceInfo ($errorCode)")
+        Timber.Forest.e("onRegistrationFailed: $serviceInfo ($errorCode)")
     }
 
     override fun onServiceUnregistered(serviceInfo: NsdServiceInfo?) {
-        Timber.i("onServiceUnregistered: $serviceInfo")
+        Timber.Forest.i("onServiceUnregistered: $serviceInfo")
     }
 
     override fun onRegistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-        Timber.i("onUnregistrationFailed: $serviceInfo ($errorCode)")
+        Timber.Forest.i("onUnregistrationFailed: $serviceInfo ($errorCode)")
     }
 
     override fun onServiceRegistered(serviceInfo: NsdServiceInfo) {
-        Timber.i("onServiceRegistered: $serviceInfo")
+        Timber.Forest.i("onServiceRegistered: $serviceInfo")
         chanelController.onServiceRegister()
     }
 }

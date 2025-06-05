@@ -12,7 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import pro.devapp.walkietalkiek.app.WalkieService
+import pro.devapp.walkietalkiek.service.WalkieService
 
 @Composable
 internal fun OffContent() {

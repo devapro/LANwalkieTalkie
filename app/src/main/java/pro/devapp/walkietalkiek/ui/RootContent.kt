@@ -23,10 +23,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import org.koin.androidx.compose.getViewModel
 import pro.devapp.walkietalkiek.MainViewMode
-import pro.devapp.walkietalkiek.app.WalkieService
 import pro.devapp.walkietalkiek.core.theme.DroidPTTTheme
 import pro.devapp.walkietalkiek.model.MainScreenAction
 import pro.devapp.walkietalkiek.model.MainScreenEvent
+import pro.devapp.walkietalkiek.service.WalkieService
 import pro.devapp.walkietalkiek.ui.components.BottomTabs
 import pro.devapp.walkietalkiek.ui.components.RailTabs
 import pro.devapp.walkietalkiek.ui.components.RequiredPermissionsNotification

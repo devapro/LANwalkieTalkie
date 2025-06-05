@@ -1,5 +1,6 @@
-package pro.devapp.walkietalkiek.app
+package pro.devapp.walkietalkiek.serivce.network
 
+import android.Manifest
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -7,33 +8,36 @@ import androidx.annotation.RequiresPermission
 import timber.log.Timber
 import java.lang.Byte
 import java.lang.Short
+import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 import kotlin.ByteArray
 import kotlin.Int
-import kotlin.Unit
 import kotlin.apply
 import kotlin.arrayOf
 import kotlin.let
 
-class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
+class VoiceRecorder(
+    //private val recordListener: (bytes: ByteArray) -> Unit
+    private val client: SocketClient
+) {
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private val executorService = Executors.newSingleThreadExecutor()
 
     private var audioRecord: AudioRecord? = null
     private var readBufferSize = 8192
 
-    @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun create() {
-        Timber.i("create")
+        Timber.Forest.i("create")
         val minRate = getMinRate()
         minRate?.let  {
-            Timber.i("minRate: $it")
+            Timber.Forest.i("minRate: $it")
             val frameSize =
                 it * (Short.SIZE / Byte.SIZE) / 2 and Int.MAX_VALUE - 1
             var bufferSize = (frameSize * 4)
             val minBufferSize = getMinBufferSize(it)
             if (bufferSize < minBufferSize) bufferSize = minBufferSize
-            Timber.i("internal audio buffer size: $bufferSize")
+            Timber.Forest.i("internal audio buffer size: $bufferSize")
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
                 it,
@@ -46,7 +50,7 @@ class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
     }
 
     fun destroy() {
-        Timber.i("destroy")
+        Timber.Forest.i("destroy")
         executorService.shutdown()
         audioRecord?.apply {
             release()
@@ -54,7 +58,7 @@ class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
     }
 
     fun startRecord() {
-        Timber.i("startRecord")
+        Timber.Forest.i("startRecord")
         audioRecord?.apply {
             startRecording()
         }
@@ -62,21 +66,22 @@ class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
     }
 
     fun stopRecord() {
-        Timber.i("stopRecord")
+        Timber.Forest.i("stopRecord")
         audioRecord?.apply { stop() }
     }
 
     private fun startReading() {
-        Timber.i("startReading")
+        Timber.Forest.i("startReading")
         executorService.execute {
             while (audioRecord?.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
                 audioRecord?.apply {
                     val bytes = ByteArray(readBufferSize)
                     val readCount = read(bytes, 0, readBufferSize)
                     if (readCount > 0) {
-                        recordListener(bytes)
+                        //recordListener(bytes)
+                        client.sendMessage(ByteBuffer.wrap(bytes))
                     }
-                    Timber.i("read $readCount")
+                    Timber.Forest.i("read $readCount")
                 }
             }
         }

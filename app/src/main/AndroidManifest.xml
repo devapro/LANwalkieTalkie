@@ -38,7 +38,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".app.WalkieService"
+            android:name=".service.WalkieService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
     </application>

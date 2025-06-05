@@ -8,4 +8,6 @@ internal sealed interface PttAction {
     data class ConnectedDevicesUpdated(
         val connectedDevices: List<ClientModel>
     ): PttAction
+    data object StartRecording : PttAction
+    data object StopRecording : PttAction
 }

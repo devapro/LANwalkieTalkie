@@ -6,8 +6,6 @@ import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 import pro.devapp.walkietalkiek.MainViewMode
 import pro.devapp.walkietalkiek.PermissionState
-import pro.devapp.walkietalkiek.app.NotificationController
-import pro.devapp.walkietalkiek.app.di.registerLegacyAppDi
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.factory.MainScreenInitStateFactory
 import pro.devapp.walkietalkiek.factory.MainTabsFactory
@@ -17,13 +15,13 @@ import pro.devapp.walkietalkiek.reducers.CheckPermissionsReducer
 import pro.devapp.walkietalkiek.reducers.InitAppReducer
 import pro.devapp.walkietalkiek.reducers.MainActionProcessor
 import pro.devapp.walkietalkiek.serivce.network.di.registerServiceNetworkDi
+import pro.devapp.walkietalkiek.service.NotificationController
 
 val appModule: Module = module {
     coreDi()
     factoriesDi()
     viewModelsDi()
     reducersDi()
-    registerLegacyAppDi()
     registerPttDi()
     registerServiceNetworkDi()
 }

@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.app
+package pro.devapp.walkietalkiek.serivce.network
 
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import timber.log.Timber
@@ -50,14 +50,15 @@ class SocketServer(
                     client.tcpNoDelay = true
                     val hostAddress = client.inetAddress.hostAddress
                     outputQueueMap[hostAddress] = LinkedBlockingDeque()
-                    clientSocket.addClient(InetSocketAddress(
-                        hostAddress,
-                        client.port
-                    ), false)
+                    clientSocket.addClient(
+                        InetSocketAddress(
+                            hostAddress,
+                            client.port
+                        ), false)
                     connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
                     handleConnection(client)
                 } catch (e: Exception) {
-                    Timber.w(e)
+                    Timber.Forest.w(e)
                 }
             }, 100, 1000, TimeUnit.MILLISECONDS)
         }
@@ -72,7 +73,7 @@ class SocketServer(
         val readingFuture = executorService.submit {
             val dataInput = DataInputStream(client.getInputStream())
             val byteArray = ByteArray(8192 * 8)
-            Timber.i("Started reading $hostAddress")
+            Timber.Forest.i("Started reading $hostAddress")
             try {
                 while (!client.isClosed && !client.isInputShutdown) {
                     val readCount = dataInput.read(byteArray)
@@ -82,7 +83,7 @@ class SocketServer(
                     Arrays.fill(byteArray, 0)
                 }
             } catch (e: Exception) {
-                Timber.w(e)
+                Timber.Forest.w(e)
             } finally {
                 closeClient(client)
             }
@@ -104,13 +105,13 @@ class SocketServer(
                         buf?.let { byteArray ->
                             outputStream.write(byteArray.array())
                             outputStream.flush()
-                            Timber.i("send data to $hostAddress")
+                            Timber.Forest.i("send data to $hostAddress")
                         }
                         errorCounter = 0
                     } catch (e: Exception) {
                         errorCounter++
                         if (errorCounter > 3) {
-                            Timber.d("errorCounter $errorCounter")
+                            Timber.Forest.d("errorCounter $errorCounter")
                             readingFuture.cancel(true)
                             closeClient(client)
                         }
@@ -133,10 +134,10 @@ class SocketServer(
         System.arraycopy(byteArray, 0, data, 0, readCount)
         if (data.size > 20) {
             voicePlayer.play(data)
-            Timber.i("message: audio ${data.size} from $hostAddress")
+            Timber.Forest.i("message: audio ${data.size} from $hostAddress")
         } else {
             val message = String(data).trim()
-            Timber.i("message: $message from $hostAddress")
+            Timber.Forest.i("message: $message from $hostAddress")
             if (message == "ping"){
                 clientSocket.sendMessageToHost(hostAddress, ByteBuffer.wrap("ping".toByteArray()))
 //                sockets[hostAddress]?.apply {
