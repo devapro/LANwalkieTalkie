@@ -45,7 +45,7 @@ class DeviceInfoRepository(private val context: Context) {
 
         return try {
             InetAddress.getByAddress(ipByteArray).hostAddress
-        } catch (ex: UnknownHostException) {
+        } catch (_: UnknownHostException) {
             null
         }
     }

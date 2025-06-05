@@ -8,6 +8,7 @@ internal class PttInitStateFactory: InitStateFactory<PttScreenState> {
         return PttScreenState(
             isConnected = false,
             myIP = "-",
+            connectedDevices = emptyList()
         )
     }
 }

@@ -48,15 +48,12 @@ fun PTTContent(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                DeviceItem(
-                    isOnline = true,
-                    address = "192.168.1.1"
-                )
-
-                DeviceItem(
-                    isOnline = true,
-                    address = "192.168.1.1"
-                )
+                state.value.connectedDevices.forEach {
+                    DeviceItem(
+                        isOnline = it.isConnected,
+                        address = it.hostAddress
+                    )
+                }
             }
             Column(
                 modifier = Modifier.weight(1f),
@@ -65,8 +62,7 @@ fun PTTContent(
             ) {
                 MyDeviceInfo(
                     isOnline = state.value.isConnected,
-                    addressIp4 = state.value.myIP,
-                    addressIp6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+                    addressIp = state.value.myIP
                 )
                 Box(
                     modifier = modifier
@@ -79,7 +75,7 @@ fun PTTContent(
                             .width(150.dp)
                             .padding(8.dp),
                         isOnline = state.value.isConnected,
-                        onClick = { /* Handle PTT button click */ }
+                        onPress = { /* Handle PTT button click */ }
                     )
                 }
                 VoiceDiagram()
@@ -91,19 +87,15 @@ fun PTTContent(
 
             MyDeviceInfo(
                 isOnline = state.value.isConnected,
-                addressIp4 = state.value.myIP,
-                addressIp6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+                addressIp = state.value.myIP
             )
 
-            DeviceItem(
-                isOnline = true,
-                address = "192.168.1.1"
-            )
-
-            DeviceItem(
-                isOnline = true,
-                address = "192.168.1.1"
-            )
+            state.value.connectedDevices.forEach {
+                DeviceItem(
+                    isOnline = it.isConnected,
+                    address = it.hostAddress
+                )
+            }
 
             Box(
                 modifier = modifier
@@ -115,8 +107,8 @@ fun PTTContent(
                     modifier = Modifier
                         .width(150.dp)
                         .padding(8.dp),
-                    isOnline = true,
-                    onClick = { /* Handle PTT button click */ }
+                    isOnline = state.value.isConnected,
+                    onPress = { /* Handle PTT button click */ }
                 )
             }
 

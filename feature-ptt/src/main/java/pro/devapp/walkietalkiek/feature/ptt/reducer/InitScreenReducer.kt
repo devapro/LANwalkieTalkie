@@ -23,6 +23,7 @@ internal class InitScreenReducer(
         return Reducer.Result(
             state = getState().copy(
                 myIP = myIP ?: "--",
+                isConnected = myIP != null
             ),
             event = null
         )

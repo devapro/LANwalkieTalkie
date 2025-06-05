@@ -4,6 +4,7 @@ import android.app.Application
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import pro.devapp.walkietalkiek.di.appModule
+import timber.log.Timber
 
 class PttApplication: Application() {
 
@@ -19,5 +20,9 @@ class PttApplication: Application() {
             // Uncomment to add koin logs
             // androidLogger(Level.DEBUG)
         }
+
+        Timber.plant(
+            Timber.DebugTree()
+        )
     }
 }
