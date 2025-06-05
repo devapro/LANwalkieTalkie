@@ -35,6 +35,10 @@ class SocketClient (
         }
     }
 
+    fun sendMessageToHost(hostAddress: String, byteBuffer: ByteBuffer) {
+        outputQueueMap[hostAddress]?.add(byteBuffer)
+    }
+
     fun addClient(socketAddress: InetSocketAddress, ignoreExist: Boolean) {
         val hostAddress = socketAddress.address.hostAddress
         if ((sockets[hostAddress] == null || ignoreExist) && !executorService.isShutdown) {

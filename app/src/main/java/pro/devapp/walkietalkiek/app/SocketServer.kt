@@ -137,30 +137,18 @@ class SocketServer(
         } else {
             val message = String(data).trim()
             Timber.i("message: $message from $hostAddress")
+            if (message == "ping"){
+                clientSocket.sendMessageToHost(hostAddress, ByteBuffer.wrap("ping".toByteArray()))
+//                sockets[hostAddress]?.apply {
+//                    try {
+//                        socket.getOutputStream().write("pong".toByteArray())
+//                    } catch (e: Exception){
+//                        removeClient(hostAddress)
+//                    }
+//                }
+            }
         }
         connectedDevicesRepository.storeDataReceivedTime(hostAddress)
-//        executorServiceRead.submit {
-//            receiverListener(hostAddress, rspData)
-//        }
-
-//        if (readCount > 20) {
-//            executorServiceRead.submit {
-//                receiverListener(rspData)
-//            }
-//            Timber.i("message: audio $readCount")
-//        } else {
-//            val message = String(rspData).trim()
-//            Timber.i("message: $message from $hostAddress")
-////            if (message == "ping"){
-////                sockets[hostAddress]?.apply {
-////                    try {
-////                        socket.getOutputStream().write("pong".toByteArray())
-////                    } catch (e: Exception){
-////                        removeClient(hostAddress)
-////                    }
-////                }
-////            }
-//        }
     }
 
     fun stop() {
