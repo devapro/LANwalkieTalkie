@@ -12,7 +12,7 @@ class DiscoveryListener(
         try {
             val ss = serviceInfo.serviceName.split(":").toTypedArray()
             val channelName = String(Base64.decode(ss[0], 0))
-            Timber.i("onServiceFound: $channelName: $serviceInfo")
+            Timber.i("DiscoveryListener: $channelName: $serviceInfo")
             chanelController.onServiceFound(serviceInfo)
         } catch (e: IllegalArgumentException) {
             Timber.w(e)

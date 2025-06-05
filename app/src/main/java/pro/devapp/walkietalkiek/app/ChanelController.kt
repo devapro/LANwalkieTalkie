@@ -68,8 +68,7 @@ class ChanelController(
                 Base64.NO_PADDING or Base64.NO_WRAP
             )
             val serviceName = "$encodedName:$deviceId:"
-            serviceInfo.serviceType =
-                SERVICE_TYPE
+            serviceInfo.serviceType = SERVICE_TYPE
             serviceInfo.serviceName = serviceName
             currentServiceName = serviceName
             serviceInfo.port = port
@@ -89,8 +88,8 @@ class ChanelController(
     }
 
     fun onServiceFound(serviceInfo: NsdServiceInfo) {
-        Timber.i("onServiceFound: $serviceInfo")
         // check for self add to list
+        Timber.i("onServiceFound: ${serviceInfo.serviceName} current: $currentServiceName")
         if (serviceInfo.serviceName == currentServiceName) {
             Timber.i("onServiceFound: SELF")
             return

@@ -58,6 +58,7 @@ class SocketClient (
                         } catch (e: Exception) {
                             Timber.w(e)
                             Timber.i("connection error ${socketAddress.address.hostAddress}")
+                            connectedDevicesRepository.setHostDisconnected(socketAddress.address.hostAddress)
                         }
                     }
                 }
