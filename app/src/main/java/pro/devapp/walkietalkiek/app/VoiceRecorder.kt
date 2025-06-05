@@ -3,8 +3,17 @@ package pro.devapp.walkietalkiek.app
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import androidx.annotation.RequiresPermission
 import timber.log.Timber
+import java.lang.Byte
+import java.lang.Short
 import java.util.concurrent.Executors
+import kotlin.ByteArray
+import kotlin.Int
+import kotlin.Unit
+import kotlin.apply
+import kotlin.arrayOf
+import kotlin.let
 
 class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
@@ -13,13 +22,14 @@ class VoiceRecorder(private val recordListener: (bytes: ByteArray) -> Unit) {
     private var audioRecord: AudioRecord? = null
     private var readBufferSize = 8192
 
+    @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
     fun create() {
         Timber.i("create")
         val minRate = getMinRate()
-        minRate?.let {
+        minRate?.let  {
             Timber.i("minRate: $it")
             val frameSize =
-                it * (java.lang.Short.SIZE / java.lang.Byte.SIZE) / 2 and Int.MAX_VALUE - 1
+                it * (Short.SIZE / Byte.SIZE) / 2 and Int.MAX_VALUE - 1
             var bufferSize = (frameSize * 4)
             val minBufferSize = getMinBufferSize(it)
             if (bufferSize < minBufferSize) bufferSize = minBufferSize

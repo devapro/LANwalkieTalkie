@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 
 class SocketClient (
     private val connectedDevicesRepository: ConnectedDevicesRepository
-): IClient {
+) {
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceClients = Executors.newCachedThreadPool()
     private val executorServiceReader = Executors.newFixedThreadPool(1)
@@ -35,7 +35,7 @@ class SocketClient (
         }
     }
 
-    override fun addClient(socketAddress: InetSocketAddress, ignoreExist: Boolean) {
+    fun addClient(socketAddress: InetSocketAddress, ignoreExist: Boolean) {
         val hostAddress = socketAddress.address.hostAddress
         if ((sockets[hostAddress] == null || ignoreExist) && !executorService.isShutdown) {
             executorService.execute {
@@ -66,7 +66,7 @@ class SocketClient (
         }
     }
 
-    override fun removeClient(hostAddress: String) {
+    fun removeClient(hostAddress: String) {
         Timber.i("removeClient $hostAddress")
         sockets[hostAddress]?.apply {
             val socketAddress = InetSocketAddress(
@@ -79,11 +79,11 @@ class SocketClient (
             Timber.i("removeClient $hostAddress")
             connectedDevicesRepository.setHostDisconnected(hostAddress)
             // try reconnect
-            reconnectTimer.schedule({ addClient(socketAddress) }, 1000, TimeUnit.MILLISECONDS)
+            reconnectTimer.schedule({ addClient(socketAddress, true) }, 1000, TimeUnit.MILLISECONDS)
         }
     }
 
-    override fun stop() {
+    fun stop() {
         sockets.forEach {
             it.value.future?.cancel(true)
             it.value.socket.close()

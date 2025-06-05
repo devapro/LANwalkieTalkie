@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
 class SocketServer(
     private val connectedDevicesRepository: ConnectedDevicesRepository,
     private val clientSocket: SocketClient
-) : IServer {
+) {
     companion object {
         const val SERVER_PORT = 9700
     }
@@ -35,7 +35,7 @@ class SocketServer(
 
     private var socket: ServerSocket? = null
 
-    override fun initServer(): Int {
+    fun initServer(): Int {
         if (socket != null && socket?.isClosed == false) {
             return SERVER_PORT
         }
@@ -163,7 +163,7 @@ class SocketServer(
 //        }
     }
 
-    override fun stop() {
+    fun stop() {
         socket?.apply {
             close()
         }
@@ -173,7 +173,7 @@ class SocketServer(
         executorServiceRead.shutdown()
     }
 
-    override fun sendMessage(byteBuffer: ByteBuffer) {
+    fun sendMessage(byteBuffer: ByteBuffer) {
         outputQueueMap.forEach { item ->
             item.value.add(byteBuffer)
         }

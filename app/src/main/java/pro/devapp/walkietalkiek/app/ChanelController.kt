@@ -4,14 +4,19 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Base64
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.serivce.network.ClientInfoResolver
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.serivce.network.data.DeviceInfoRepository
 import timber.log.Timber
 import java.nio.ByteBuffer
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+
+private const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */
 
 class ChanelController(
     context: Context,
@@ -28,13 +33,12 @@ class ChanelController(
 
     private var currentServiceName: String? = null
 
-    private val executorPing = Executors.newSingleThreadScheduledExecutor()
-
-    companion object {
-        const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */
-    }
+    private var pingScope: CoroutineScope? = null
 
     fun startDiscovery() {
+        pingScope = coroutineContextProvider.createScope(
+            coroutineContextProvider.io
+        )
         val port = server.initServer()
         registerNsdService(port)
     }
@@ -44,9 +48,9 @@ class ChanelController(
             stopServiceDiscovery(discoveryListener)
             unregisterService(registrationListener)
         }
-        executorPing.shutdown()
         client.stop()
         server.stop()
+        pingScope?.cancel()
     }
 
     fun onServiceRegister() {
@@ -79,7 +83,12 @@ class ChanelController(
                 NsdManager.PROTOCOL_DNS_SD,
                 registrationListener
             )
-            executorPing.scheduleWithFixedDelay({ ping() }, 1000, 2000, TimeUnit.MILLISECONDS)
+            pingScope?.launch {
+                while (isActive) {
+                    ping()
+                    delay(2000L)
+                }
+            }
         }
     }
 
@@ -106,7 +115,7 @@ class ChanelController(
                 inetSocketAddress.address.hostAddress,
                 nsdServiceInfo.serviceName
             )
-            client.addClient(inetSocketAddress)
+            client.addClient(inetSocketAddress, true)
         }
     }
 
