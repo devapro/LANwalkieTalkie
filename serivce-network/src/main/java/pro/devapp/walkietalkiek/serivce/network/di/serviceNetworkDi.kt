@@ -7,7 +7,6 @@ import pro.devapp.walkietalkiek.serivce.network.ChanelController
 import pro.devapp.walkietalkiek.serivce.network.ClientInfoResolver
 import pro.devapp.walkietalkiek.serivce.network.SocketClient
 import pro.devapp.walkietalkiek.serivce.network.SocketServer
-import pro.devapp.walkietalkiek.serivce.network.VoiceRecorder
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.serivce.network.data.DeviceInfoRepository
 
@@ -19,6 +18,4 @@ fun Module.registerServiceNetworkDi() {
     singleOf(::SocketClient)
     singleOf(::SocketServer)
     singleOf(::ChanelController)
-
-    singleOf(::VoiceRecorder)
 }

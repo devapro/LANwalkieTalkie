@@ -16,6 +16,7 @@ import pro.devapp.walkietalkiek.reducers.InitAppReducer
 import pro.devapp.walkietalkiek.reducers.MainActionProcessor
 import pro.devapp.walkietalkiek.serivce.network.di.registerServiceNetworkDi
 import pro.devapp.walkietalkiek.service.NotificationController
+import pro.devapp.walkietalkiek.service.voice.di.registerVoiceDi
 
 val appModule: Module = module {
     coreDi()
@@ -24,6 +25,7 @@ val appModule: Module = module {
     reducersDi()
     registerPttDi()
     registerServiceNetworkDi()
+    registerVoiceDi()
 }
 
 private fun Module.coreDi() {

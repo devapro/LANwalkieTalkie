@@ -24,8 +24,7 @@ class ChanelController(
     private val client: SocketClient,
     private val server: SocketServer,
     private val coroutineContextProvider: CoroutineContextProvider,
-    private val clientInfoResolver: ClientInfoResolver,
-    private val voiceRecorder: VoiceRecorder
+    private val clientInfoResolver: ClientInfoResolver
 ) {
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val discoveryListener = DiscoveryListener(this)
@@ -44,8 +43,6 @@ class ChanelController(
     }
 
     fun stopDiscovery() {
-        voiceRecorder.stopRecord()
-        voiceRecorder.destroy() // Move to service??
         nsdManager.apply {
             stopServiceDiscovery(discoveryListener)
             unregisterService(registrationListener)
@@ -123,7 +120,10 @@ class ChanelController(
 
     fun onServiceLost(nsdServiceInfo: NsdServiceInfo) {
         Timber.Forest.i("onServiceLost: $nsdServiceInfo")
-        connectedDevicesRepository.setHostDisconnected(nsdServiceInfo.host.hostAddress)
+        nsdServiceInfo.hostAddresses.firstOrNull()?.hostAddress?.let {
+            connectedDevicesRepository.setHostDisconnected(it)
+        }
+
         if (nsdServiceInfo.serviceName == currentServiceName) {
             Timber.Forest.i("onServiceLost: SELF")
             return

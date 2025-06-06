@@ -22,8 +22,6 @@ class SocketServer(
         const val SERVER_PORT = 9700
     }
 
-    private val voicePlayer = VoicePlayer()
-
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceRead = Executors.newCachedThreadPool()
     private val acceptConnectionExecutor = Executors.newScheduledThreadPool(1)
@@ -34,6 +32,8 @@ class SocketServer(
     private val outputQueueMap = ConcurrentHashMap<String, LinkedBlockingDeque<ByteBuffer>>()
 
     private var socket: ServerSocket? = null
+
+    var dataListener: ((bytes: ByteArray) -> Unit)? = null
 
     fun initServer(): Int {
         if (socket != null && socket?.isClosed == false) {
@@ -62,8 +62,6 @@ class SocketServer(
                 }
             }, 100, 1000, TimeUnit.MILLISECONDS)
         }
-        voicePlayer.create()
-        voicePlayer.startPlay()
         return SERVER_PORT
     }
 
@@ -133,7 +131,7 @@ class SocketServer(
         val data = ByteArray(readCount)
         System.arraycopy(byteArray, 0, data, 0, readCount)
         if (data.size > 20) {
-            voicePlayer.play(data)
+            dataListener?.invoke(data)
             Timber.Forest.i("message: audio ${data.size} from $hostAddress")
         } else {
             val message = String(data).trim()
@@ -156,7 +154,6 @@ class SocketServer(
         socket?.apply {
             close()
         }
-        voicePlayer.stopPlay()
         executorService.shutdown()
         acceptConnectionExecutor.shutdown()
         executorServiceRead.shutdown()

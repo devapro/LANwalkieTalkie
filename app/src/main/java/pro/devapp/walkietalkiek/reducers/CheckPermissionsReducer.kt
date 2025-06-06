@@ -7,7 +7,7 @@ import pro.devapp.walkietalkiek.core.mvi.Reducer
 import pro.devapp.walkietalkiek.model.MainScreenAction
 import pro.devapp.walkietalkiek.model.MainScreenEvent
 import pro.devapp.walkietalkiek.model.MainScreenState
-import pro.devapp.walkietalkiek.serivce.network.VoiceRecorder
+import pro.devapp.walkietalkiek.service.voice.VoiceRecorder
 
 internal class CheckPermissionsReducer(
     private val permissionState: PermissionState,

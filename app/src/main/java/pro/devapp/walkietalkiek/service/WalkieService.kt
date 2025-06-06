@@ -9,11 +9,15 @@ import android.os.PowerManager
 import androidx.core.app.ServiceCompat
 import org.koin.android.ext.android.inject
 import pro.devapp.walkietalkiek.serivce.network.ChanelController
+import pro.devapp.walkietalkiek.service.voice.VoicePlayer
+import pro.devapp.walkietalkiek.service.voice.VoiceRecorder
 
 class WalkieService: Service() {
 
     private val chanelController: ChanelController by inject()
     private val notificationController: NotificationController by inject()
+    private val voiceRecorder: VoiceRecorder by inject()
+    private val voicePlayer: VoicePlayer by inject()
 
     private var wakeLock: PowerManager.WakeLock? = null
 
@@ -25,6 +29,7 @@ class WalkieService: Service() {
         super.onCreate()
         chanelController.startDiscovery()
         setWakeLock()
+        voicePlayer.create()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -44,6 +49,9 @@ class WalkieService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        voiceRecorder.stopRecord()
+        voiceRecorder.destroy()
+        voicePlayer.shutdown()
         chanelController.stopDiscovery()
         releaseWakeLock()
     }

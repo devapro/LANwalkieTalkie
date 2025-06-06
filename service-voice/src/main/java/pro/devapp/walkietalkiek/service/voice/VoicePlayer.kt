@@ -1,10 +1,11 @@
-package pro.devapp.walkietalkiek.serivce.network
+package pro.devapp.walkietalkiek.service.voice
 
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioTrack
 import android.os.Build
+import pro.devapp.walkietalkiek.serivce.network.SocketServer
 import timber.log.Timber
 import java.lang.Byte
 import java.lang.Short
@@ -14,7 +15,9 @@ import kotlin.apply
 import kotlin.arrayOf
 import kotlin.let
 
-class VoicePlayer {
+class VoicePlayer(
+    private val socketServer: SocketServer
+) {
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private var audioTrack: AudioTrack? = null
     private var bufferSize = 0
@@ -54,28 +57,21 @@ class VoicePlayer {
                 play()
             }
         }
+        socketServer.dataListener = { bytes ->
+            play(bytes)
+        }
     }
 
-    fun play(bytes: ByteArray) {
+    private fun play(bytes: ByteArray) {
         Timber.Forest.i("play ${bytes.size} - ${bytes[0]} ${bytes[1]}")
         if (audioTrack?.playState == AudioTrack.PLAYSTATE_STOPPED) {
             Timber.Forest.w("PLAYER STOPPED!!!")
         }
-        audioTrack?.apply {
-            write(bytes, 0, bytes.size)
-            Timber.Forest.i("write ${bytes.size}")
-//            if (frame++ == 0){
-//                audioTrack?.play()
-//                audioTrack?.stop()
-//            }
-        }
+        audioTrack?.write(bytes, 0, bytes.size)
     }
 
-    fun startPlay() {
-
-    }
-
-    fun stopPlay() {
+    fun shutdown() {
+        socketServer.dataListener = null
         audioTrack?.apply {
             stop()
             release()

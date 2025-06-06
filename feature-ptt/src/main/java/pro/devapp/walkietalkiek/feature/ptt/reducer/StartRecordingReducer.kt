@@ -4,7 +4,7 @@ import pro.devapp.walkietalkiek.core.mvi.Reducer
 import pro.devapp.walkietalkiek.feature.ptt.model.PttAction
 import pro.devapp.walkietalkiek.feature.ptt.model.PttEvent
 import pro.devapp.walkietalkiek.feature.ptt.model.PttScreenState
-import pro.devapp.walkietalkiek.serivce.network.VoiceRecorder
+import pro.devapp.walkietalkiek.service.voice.VoiceRecorder
 
 internal class StartRecordingReducer(
     private val voiceRecorder: VoiceRecorder

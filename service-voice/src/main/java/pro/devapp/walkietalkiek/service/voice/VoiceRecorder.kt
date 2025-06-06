@@ -1,10 +1,11 @@
-package pro.devapp.walkietalkiek.serivce.network
+package pro.devapp.walkietalkiek.service.voice
 
 import android.Manifest
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.annotation.RequiresPermission
+import pro.devapp.walkietalkiek.serivce.network.SocketClient
 import timber.log.Timber
 import java.lang.Byte
 import java.lang.Short
@@ -17,7 +18,6 @@ import kotlin.arrayOf
 import kotlin.let
 
 class VoiceRecorder(
-    //private val recordListener: (bytes: ByteArray) -> Unit
     private val client: SocketClient
 ) {
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
@@ -78,7 +78,6 @@ class VoiceRecorder(
                     val bytes = ByteArray(readBufferSize)
                     val readCount = read(bytes, 0, readBufferSize)
                     if (readCount > 0) {
-                        //recordListener(bytes)
                         client.sendMessage(ByteBuffer.wrap(bytes))
                     }
                     Timber.Forest.i("read $readCount")
