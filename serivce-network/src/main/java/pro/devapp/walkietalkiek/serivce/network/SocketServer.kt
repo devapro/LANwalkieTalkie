@@ -1,5 +1,7 @@
 package pro.devapp.walkietalkiek.serivce.network
 
+import kotlinx.coroutines.cancel
+import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import timber.log.Timber
 import java.io.DataInputStream
@@ -14,17 +16,21 @@ import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
+private const val SERVER_PORT = 9700
+
 class SocketServer(
     private val connectedDevicesRepository: ConnectedDevicesRepository,
-    private val clientSocket: SocketClient
+    private val clientSocket: SocketClient,
+    private val coroutineContextProvider: CoroutineContextProvider
 ) {
-    companion object {
-        const val SERVER_PORT = 9700
-    }
 
     private val executorService = Executors.newCachedThreadPool()
     private val executorServiceRead = Executors.newCachedThreadPool()
     private val acceptConnectionExecutor = Executors.newScheduledThreadPool(1)
+
+    private val acceptConnectionScope = coroutineContextProvider.createScope(
+        coroutineContextProvider.io
+    )
 
     /**
      * Data for sending
@@ -39,11 +45,14 @@ class SocketServer(
         if (socket != null && socket?.isClosed == false) {
             return SERVER_PORT
         }
-        socket = ServerSocket(SERVER_PORT)
+        socket = ServerSocket(SERVER_PORT).apply {
+            reuseAddress = true
+         //   soTimeout = 1000 // Set a timeout for accept to avoid blocking indefinitely
+        }
         socket?.let {
             acceptConnectionExecutor.scheduleWithFixedDelay({
                 try {
-                    it.reuseAddress = true
+                //    it.reuseAddress = true
                     val client = it.accept()
                     client.sendBufferSize = 8192
                     client.receiveBufferSize = 8192 * 2
@@ -54,7 +63,8 @@ class SocketServer(
                         InetSocketAddress(
                             hostAddress,
                             client.port
-                        ), false)
+                        )
+                    )
                     connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
                     handleConnection(client)
                 } catch (e: Exception) {
@@ -62,6 +72,27 @@ class SocketServer(
                 }
             }, 100, 1000, TimeUnit.MILLISECONDS)
         }
+//        acceptConnectionScope.launch {
+//            try {
+//                //    it.reuseAddress = true
+//                val client = socket!!.accept()
+//                client.sendBufferSize = 8192
+//                client.receiveBufferSize = 8192 * 2
+//                client.tcpNoDelay = true
+//                val hostAddress = client.inetAddress.hostAddress
+//                outputQueueMap[hostAddress] = LinkedBlockingDeque()
+//                clientSocket.addClient(
+//                    InetSocketAddress(
+//                        hostAddress,
+//                        client.port
+//                    )
+//                )
+//                connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
+//                handleConnection(client)
+//            } catch (e: Exception) {
+//                Timber.Forest.w(e)
+//            }
+//        }
         return SERVER_PORT
     }
 
@@ -157,6 +188,7 @@ class SocketServer(
         executorService.shutdown()
         acceptConnectionExecutor.shutdown()
         executorServiceRead.shutdown()
+        acceptConnectionScope.cancel()
     }
 
     fun sendMessage(byteBuffer: ByteBuffer) {

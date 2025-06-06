@@ -114,7 +114,7 @@ class ChanelController(
                 inetSocketAddress.address.hostAddress,
                 nsdServiceInfo.serviceName
             )
-            client.addClient(inetSocketAddress, true)
+            client.addClient(inetSocketAddress)
         }
     }
 

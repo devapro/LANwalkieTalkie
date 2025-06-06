@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.koin.core)
     implementation(libs.koin.android)
 
+    implementation(project(":core"))
     implementation(project(":serivce-network"))
 
     testImplementation(libs.junit)
