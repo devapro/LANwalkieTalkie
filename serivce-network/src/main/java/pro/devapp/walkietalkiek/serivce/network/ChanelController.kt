@@ -56,9 +56,10 @@ class ChanelController(
         nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
     }
 
-//    fun sendMessage(byteBuffer: ByteBuffer) {
-//        client.sendMessage(byteBuffer)
-//    }
+    fun sendMessage(byteBuffer: ByteBuffer) {
+        client.sendMessage(byteBuffer)
+        server.sendMessage(byteBuffer)
+    }
 
     private fun registerNsdService(port: Int) {
         Timber.Forest.i("registerService")
@@ -85,7 +86,7 @@ class ChanelController(
             pingScope?.launch {
                 while (isActive) {
                     ping()
-                    delay(2000L)
+                    delay(5000L)
                 }
             }
         }
@@ -114,7 +115,7 @@ class ChanelController(
                 inetSocketAddress.address.hostAddress,
                 nsdServiceInfo.serviceName
             )
-            client.addClient(inetSocketAddress, true)
+            client.addClient(inetSocketAddress)
         }
     }
 

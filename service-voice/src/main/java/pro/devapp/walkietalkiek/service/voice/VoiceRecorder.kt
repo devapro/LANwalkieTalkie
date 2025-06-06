@@ -5,12 +5,14 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import androidx.annotation.RequiresPermission
-import pro.devapp.walkietalkiek.serivce.network.SocketClient
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
+import pro.devapp.walkietalkiek.serivce.network.ChanelController
 import timber.log.Timber
 import java.lang.Byte
 import java.lang.Short
 import java.nio.ByteBuffer
-import java.util.concurrent.Executors
 import kotlin.ByteArray
 import kotlin.Int
 import kotlin.apply
@@ -18,10 +20,14 @@ import kotlin.arrayOf
 import kotlin.let
 
 class VoiceRecorder(
-    private val client: SocketClient
+    private val chanelController: ChanelController,
+    private val coroutineContextProvider: CoroutineContextProvider
 ) {
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
-    private val executorService = Executors.newSingleThreadExecutor()
+
+    private val coroutineScope = coroutineContextProvider.createScope(
+        coroutineContextProvider.io.limitedParallelism(1)
+    )
 
     private var audioRecord: AudioRecord? = null
     private var readBufferSize = 8192
@@ -51,7 +57,7 @@ class VoiceRecorder(
 
     fun destroy() {
         Timber.Forest.i("destroy")
-        executorService.shutdown()
+        coroutineScope.cancel()
         audioRecord?.apply {
             release()
         }
@@ -72,13 +78,13 @@ class VoiceRecorder(
 
     private fun startReading() {
         Timber.Forest.i("startReading")
-        executorService.execute {
+        coroutineScope.launch {
             while (audioRecord?.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
                 audioRecord?.apply {
                     val bytes = ByteArray(readBufferSize)
                     val readCount = read(bytes, 0, readBufferSize)
                     if (readCount > 0) {
-                        client.sendMessage(ByteBuffer.wrap(bytes))
+                        chanelController.sendMessage(ByteBuffer.wrap(bytes))
                     }
                     Timber.Forest.i("read $readCount")
                 }

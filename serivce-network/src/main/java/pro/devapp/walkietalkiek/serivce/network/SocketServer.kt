@@ -1,30 +1,52 @@
 package pro.devapp.walkietalkiek.serivce.network
 
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import timber.log.Timber
 import java.io.DataInputStream
 import java.io.DataOutputStream
-import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.nio.ByteBuffer
 import java.util.Arrays
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 class SocketServer(
     private val connectedDevicesRepository: ConnectedDevicesRepository,
-    private val clientSocket: SocketClient
+    private val clientSocket: SocketClient,
+    private val coroutineContextProvider: CoroutineContextProvider
 ) {
-    companion object {
-        const val SERVER_PORT = 9700
+
+    private val acceptConnectionScope = coroutineContextProvider.createScope(
+        coroutineContextProvider.io
+    )
+
+    private val readDataScope = coroutineContextProvider.createScope(
+        coroutineContextProvider.io
+    )
+
+    private val writeDataScope = coroutineContextProvider.createScope(
+        coroutineContextProvider.io
+    )
+
+    private val SERVER_PORT by lazy {
+        getPort().also { port ->
+            Timber.Forest.i("Server port initialized: $port")
+        }
     }
 
-    private val executorService = Executors.newCachedThreadPool()
-    private val executorServiceRead = Executors.newCachedThreadPool()
-    private val acceptConnectionExecutor = Executors.newScheduledThreadPool(1)
+    private fun getPort(): Int {
+        return Random.nextInt(1111, 9999).also { port ->
+            Timber.Forest.i("Generated random port: $port")
+        }
+    }
 
     /**
      * Data for sending
@@ -39,28 +61,27 @@ class SocketServer(
         if (socket != null && socket?.isClosed == false) {
             return SERVER_PORT
         }
-        socket = ServerSocket(SERVER_PORT)
-        socket?.let {
-            acceptConnectionExecutor.scheduleWithFixedDelay({
+        socket = ServerSocket(SERVER_PORT).apply {
+            reuseAddress = false
+            soTimeout = 5000 // Set a timeout for accept to avoid blocking indefinitely
+        }
+        acceptConnectionScope.launch {
+            delay(100L)
+            while (acceptConnectionScope.isActive) {
                 try {
-                    it.reuseAddress = true
-                    val client = it.accept()
+                    val client = socket!!.accept()
                     client.sendBufferSize = 8192
                     client.receiveBufferSize = 8192 * 2
                     client.tcpNoDelay = true
                     val hostAddress = client.inetAddress.hostAddress
                     outputQueueMap[hostAddress] = LinkedBlockingDeque()
-                    clientSocket.addClient(
-                        InetSocketAddress(
-                            hostAddress,
-                            client.port
-                        ), false)
                     connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
                     handleConnection(client)
                 } catch (e: Exception) {
                     Timber.Forest.w(e)
                 }
-            }, 100, 1000, TimeUnit.MILLISECONDS)
+                delay(1000L)
+            }
         }
         return SERVER_PORT
     }
@@ -68,7 +89,7 @@ class SocketServer(
     private fun handleConnection(client: Socket) {
         val hostAddress = client.inetAddress.hostAddress
         var errorCounter = 0
-        val readingFuture = executorService.submit {
+        val readingFuture = readDataScope.launch {
             val dataInput = DataInputStream(client.getInputStream())
             val byteArray = ByteArray(8192 * 8)
             Timber.Forest.i("Started reading $hostAddress")
@@ -86,7 +107,7 @@ class SocketServer(
                 closeClient(client)
             }
         }
-        executorService.submit {
+        writeDataScope.launch {
             if (!client.isClosed) {
                 val outputStream = DataOutputStream(client.getOutputStream())
                 while (!client.isClosed && !client.isOutputShutdown) {
@@ -110,7 +131,7 @@ class SocketServer(
                         errorCounter++
                         if (errorCounter > 3) {
                             Timber.Forest.d("errorCounter $errorCounter")
-                            readingFuture.cancel(true)
+                            readingFuture.cancel()
                             closeClient(client)
                         }
                     }
@@ -137,7 +158,7 @@ class SocketServer(
             val message = String(data).trim()
             Timber.Forest.i("message: $message from $hostAddress")
             if (message == "ping"){
-                clientSocket.sendMessageToHost(hostAddress, ByteBuffer.wrap("ping".toByteArray()))
+                clientSocket.sendMessageToHost(hostAddress, ByteBuffer.wrap("pong".toByteArray()))
 //                sockets[hostAddress]?.apply {
 //                    try {
 //                        socket.getOutputStream().write("pong".toByteArray())
@@ -154,9 +175,9 @@ class SocketServer(
         socket?.apply {
             close()
         }
-        executorService.shutdown()
-        acceptConnectionExecutor.shutdown()
-        executorServiceRead.shutdown()
+        readDataScope.cancel()
+        writeDataScope.cancel()
+        acceptConnectionScope.cancel()
     }
 
     fun sendMessage(byteBuffer: ByteBuffer) {
