@@ -97,6 +97,7 @@ fun PTTButton(
         modifier = modifier.pointerInput(Unit) {
             detectTapGestures(
                 onPress = {
+                    if (!isOnline) return@detectTapGestures
                     try {
                         isPressed.value = true
                         onPress()

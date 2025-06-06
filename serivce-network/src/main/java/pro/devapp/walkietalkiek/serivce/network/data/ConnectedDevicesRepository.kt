@@ -20,39 +20,46 @@ class ConnectedDevicesRepository {
         _clientsFlow.tryEmit(clientsList)
     }
 
-    fun addOrUpdateHostStateToConnected(hostAddress: String) {
+    fun addOrUpdateHostStateToConnected(hostAddress: String, port: Int) {
         clients[hostAddress] = ClientModel(
-            hostAddress,
-            clients[hostAddress]?.hostName ?: "",
-            true
+            hostAddress = hostAddress,
+            isConnected = true,
+            hostName = clients[hostAddress]?.hostName.orEmpty(),
+            port = port,
+            lastDataReceivedAt = Date().time
         )
         publishChanges()
     }
 
     fun setHostDisconnected(hostAddress: String) {
         clients[hostAddress] = ClientModel(
-            hostAddress,
-            clients[hostAddress]?.hostName ?: "",
-            false
+            hostAddress = hostAddress,
+            isConnected = false,
+            hostName = clients[hostAddress]?.hostName.orEmpty(),
+            port = clients[hostAddress]?.port ?: 0,
+            lastDataReceivedAt = clients[hostAddress]?.lastDataReceivedAt ?: 0,
         )
         publishChanges()
     }
 
     fun addHostInfo(hostAddress: String, name: String) {
         clients[hostAddress] = ClientModel(
-            hostAddress,
-            name,
-            clients[hostAddress]?.isConnected == true
+            hostAddress = hostAddress,
+            hostName = name,
+            isConnected = clients[hostAddress]?.isConnected == true,
+            port = clients[hostAddress]?.port ?: 0,
+            lastDataReceivedAt = clients[hostAddress]?.lastDataReceivedAt ?: 0,
         )
         publishChanges()
     }
 
     fun storeDataReceivedTime(hostAddress: String) {
         clients[hostAddress] = ClientModel(
-            hostAddress,
-            clients[hostAddress]?.hostName ?: "",
-            clients[hostAddress]?.isConnected != false,
-            Date().time
+            hostAddress = hostAddress,
+            hostName = clients[hostAddress]?.hostName.orEmpty(),
+            isConnected = clients[hostAddress]?.isConnected != false,
+            port = clients[hostAddress]?.port ?: 0,
+            lastDataReceivedAt = clients[hostAddress]?.lastDataReceivedAt ?: 0,
         )
         publishChanges()
     }

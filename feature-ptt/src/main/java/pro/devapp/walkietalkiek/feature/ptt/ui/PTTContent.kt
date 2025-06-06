@@ -52,7 +52,7 @@ fun PTTContent(
                 state.value.connectedDevices.forEach {
                     DeviceItem(
                         isOnline = it.isConnected,
-                        address = it.hostAddress
+                        address = "${it.hostAddress}:${it.port}"
                     )
                 }
             }
@@ -99,7 +99,7 @@ fun PTTContent(
             state.value.connectedDevices.forEach {
                 DeviceItem(
                     isOnline = it.isConnected,
-                    address = it.hostAddress
+                    address = "${it.hostAddress}:${it.port}"
                 )
             }
 

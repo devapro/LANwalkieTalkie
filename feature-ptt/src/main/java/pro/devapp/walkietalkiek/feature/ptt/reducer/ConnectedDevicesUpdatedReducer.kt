@@ -17,7 +17,8 @@ internal class ConnectedDevicesUpdatedReducer
 
         return Reducer.Result(
             state = getState().copy(
-                connectedDevices = action.connectedDevices
+                connectedDevices = action.connectedDevices,
+                isConnected = action.connectedDevices.isNotEmpty()
             ),
             event = null
         )

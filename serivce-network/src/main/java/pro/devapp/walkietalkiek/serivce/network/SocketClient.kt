@@ -81,7 +81,7 @@ class SocketClient (
                         sockets[hostAddress] = socket
                         outputQueueMap[hostAddress] = LinkedBlockingDeque()
                         Timber.Forest.i("AddClient $hostAddress ${socketAddress.port}")
-                        connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
+                        connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress, socketAddress.port)
                         handleConnection(socket)
                     } catch (e: Exception) {
                         Timber.Forest.w(e)

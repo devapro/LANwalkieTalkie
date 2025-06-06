@@ -75,7 +75,7 @@ class SocketServer(
                     client.tcpNoDelay = true
                     val hostAddress = client.inetAddress.hostAddress
                     outputQueueMap[hostAddress] = LinkedBlockingDeque()
-                    connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress)
+                    connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress, client.port)
                     handleConnection(client)
                 } catch (e: Exception) {
                     Timber.Forest.w(e)
