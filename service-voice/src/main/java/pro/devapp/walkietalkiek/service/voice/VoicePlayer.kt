@@ -5,6 +5,8 @@ import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioTrack
 import android.os.Build
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import pro.devapp.walkietalkiek.serivce.network.SocketServer
 import timber.log.Timber
 import java.lang.Byte
@@ -21,6 +23,13 @@ class VoicePlayer(
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private var audioTrack: AudioTrack? = null
     private var bufferSize = 0
+
+    private val _voiceDataFlow = MutableSharedFlow<ByteArray>(
+        replay = 1,
+        extraBufferCapacity = 10
+    )
+    val voiceDataFlow: SharedFlow<ByteArray>
+        get() = _voiceDataFlow
 
     fun create() {
         val minRate = getMinRate()
@@ -68,6 +77,7 @@ class VoicePlayer(
             Timber.Forest.w("PLAYER STOPPED!!!")
         }
         audioTrack?.write(bytes, 0, bytes.size)
+        _voiceDataFlow.tryEmit(bytes)
     }
 
     fun shutdown() {

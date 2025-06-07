@@ -123,7 +123,12 @@ fun PTTContent(
                 )
             }
 
-            VoiceDiagram()
+            WaveCanvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                data = state.value.voiceData,
+            )
         }
     }
 }
