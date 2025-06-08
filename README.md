@@ -1,21 +1,47 @@
-# Push-to-Talk App. Local Network Communication.
+# Push to Talk for local network
 
-Discover instant, server-free communication with our Push-to-Talk App! Designed for local networks, this app transforms your device into both a server and a client, enabling direct, real-time voice and data exchange without relying on external servers.
+### Motivation
 
-Key Features
-Server-Free Connectivity: Each app instance acts as its own server.
-Effortless Device Discovery: App used NsdManager, the app automatically detects and connects to devices in local network.
-Data Transfer: App used SocketChannel (java.nio.channels) for reliable, low-latency data transmission.
+This app is proof of concept for push-to-talk application for local networks, and example of usage of different Android APIs and libraries.
 
-<img src="https://github.com/devapro/LANwalkieTalkie/raw/master/screen.jpg" width="230" />
+### Description
+This app is a simple push-to-talk application for local networks, allowing users to communicate with each other without the need for an internet connection (only local WIFI network).
 
-## TODO:
+The app works on the local network without server.
+Each app instance has a server and client.
+App find other devices through NsdManager.
 
-- ping (check connection by timer)
-- send only if has active client
-- add limit to send queue
-- using Compose for UI
-- added talk button to foreground notification
-- switch between audio outputs
-- settings
-- sounds (for new messages, for start play audio)
+Apps contains example of usage of:
+- NsdManager
+- MediaRecorder
+- AudioRecord
+- AudioTrack
+- Foreground service
+
+App architecture is based on MVI.
+UI is implemented with Jetpack Compose.
+
+### App structure
+
+- `app` - main application package
+  - `core` - core architecture components
+  - `core-ui` - reusable UI components
+  - `service-network` - classes for network communication
+  - `service-voice` - classes for recording and playing
+  - `features-XXX` - App UI features
+    - `ptt` - Ptt
+    - `chat` - chat
+    - `settings` - settings screen
+
+### Ideas and pull requests
+
+If you have any ideas or suggestions for improvements, feel free to create a pull request or open an issue.
+
+### Screenshots
+
+<table>
+    <tr>
+        <td><img src="https://github.com/devapro/LANwalkieTalkie/raw/master/portrait_chart.jpg" alt="App screen" width="300"/></td>
+        <td><img src="https://github.com/devapro/LANwalkieTalkie/raw/master/lanscape_chart.jpg" alt="App screen" width="300"/></td>
+    </tr>
+</table>

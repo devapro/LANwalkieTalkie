@@ -8,8 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import pro.devapp.walkietalkiek.MainActivity
 import pro.devapp.walkietalkiek.R
-import pro.devapp.walkietalkiek.ui.MainActivity
 
 class NotificationController(private val context: Context) {
 
