@@ -37,4 +37,11 @@ UI is implemented with Jetpack Compose.
 
 If you have any ideas or suggestions for improvements, feel free to create a pull request or open an issue.
 
-![App screen](https://github.com/devapro/LANwalkieTalkie/raw/master/screen.jpg)
+### Screenshots
+
+<table>
+    <tr>
+        <td><img src="https://github.com/devapro/LANwalkieTalkie/raw/master/portrait_chart.jpg" alt="App screen" width="300"/></td>
+        <td><img src="https://github.com/devapro/LANwalkieTalkie/raw/master/lanscape_chart.jpg" alt="App screen" width="300"/></td>
+    </tr>
+</table>
