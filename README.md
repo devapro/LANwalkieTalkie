@@ -41,7 +41,7 @@ If you have any ideas or suggestions for improvements, feel free to create a pul
 
 <table>
     <tr>
-        <td><img src="https://github.com/devapro/LANwalkieTalkie/raw/master/portrait_chart.jpg" alt="App screen" width="300"/></td>
-        <td><img src="https://github.com/devapro/LANwalkieTalkie/raw/master/lanscape_chart.jpg" alt="App screen" width="300"/></td>
+        <td><img src="https://raw.githubusercontent.com/devapro/LANwalkieTalkie/refs/heads/master/portrait_chart.jpeg" alt="App screen" width="300"/></td>
+        <td><img src="https://raw.githubusercontent.com/devapro/LANwalkieTalkie/refs/heads/master/landscape_chart.jpeg" alt="App screen" width="400"/></td>
     </tr>
 </table>
