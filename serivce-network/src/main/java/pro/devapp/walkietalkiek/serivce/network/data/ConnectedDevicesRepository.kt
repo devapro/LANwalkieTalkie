@@ -12,12 +12,16 @@ class ConnectedDevicesRepository {
     private val clients = HashMap<String, ClientModel>()
 
     private val _clientsFlow = MutableStateFlow<List<ClientModel>>(emptyList())
-    val clientsSubject: SharedFlow<List<ClientModel>>
+    val clientsFlow: SharedFlow<List<ClientModel>>
         get() = _clientsFlow
 
     private fun publishChanges() {
         val clientsList = clients.map { it.value }.toList()
         _clientsFlow.tryEmit(clientsList)
+    }
+
+    fun getClientByAddress(hostAddress: String): ClientModel? {
+        return clients[hostAddress]
     }
 
     fun addOrUpdateHostStateToConnected(hostAddress: String, port: Int) {

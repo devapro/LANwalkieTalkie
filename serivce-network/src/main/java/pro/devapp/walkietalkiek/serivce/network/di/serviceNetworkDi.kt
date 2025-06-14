@@ -12,6 +12,7 @@ import pro.devapp.walkietalkiek.serivce.network.SocketClient
 import pro.devapp.walkietalkiek.serivce.network.SocketServer
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
 import pro.devapp.walkietalkiek.serivce.network.data.DeviceInfoRepository
+import pro.devapp.walkietalkiek.serivce.network.data.TextMessagesRepository
 
 fun Module.registerServiceNetworkDi() {
     factoryOf(::ClientInfoResolver)
@@ -26,4 +27,5 @@ fun Module.registerServiceNetworkDi() {
             ClientController::class
         )
     )
+    singleOf(::TextMessagesRepository)
 }

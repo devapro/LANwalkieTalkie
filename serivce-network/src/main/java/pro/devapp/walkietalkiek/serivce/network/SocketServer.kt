@@ -6,6 +6,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.serivce.network.data.ConnectedDevicesRepository
+import pro.devapp.walkietalkiek.serivce.network.data.TextMessagesRepository
 import timber.log.Timber
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -21,6 +22,7 @@ import kotlin.random.Random
 class SocketServer(
     private val connectedDevicesRepository: ConnectedDevicesRepository,
     private val clientSocket: SocketClient,
+    private val textMessagesRepository: TextMessagesRepository,
     private val coroutineContextProvider: CoroutineContextProvider
 ) {
 
@@ -158,14 +160,15 @@ class SocketServer(
             val message = String(data).trim()
             Timber.Forest.i("message: $message from $hostAddress")
             if (message == "ping"){
-                clientSocket.sendMessageToHost(hostAddress, ByteBuffer.wrap("pong".toByteArray()))
-//                sockets[hostAddress]?.apply {
-//                    try {
-//                        socket.getOutputStream().write("pong".toByteArray())
-//                    } catch (e: Exception){
-//                        removeClient(hostAddress)
-//                    }
-//                }
+                clientSocket.sendMessageToHost(
+                    hostAddress = hostAddress,
+                    byteBuffer = ByteBuffer.wrap("pong".toByteArray())
+                )
+            } else {
+                textMessagesRepository.addMessage(
+                    message = message,
+                    hostAddress = hostAddress
+                )
             }
         }
         connectedDevicesRepository.storeDataReceivedTime(hostAddress)

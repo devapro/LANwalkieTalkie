@@ -18,7 +18,7 @@ internal class ChatViewModel(
 
     fun startCollectingConnectedDevices() {
         viewModelScope.launch {
-            connectedDevicesRepository.clientsSubject.collect {
+            connectedDevicesRepository.clientsFlow.collect {
                 onAction(ChatAction.ConnectedDevicesUpdated(it))
             }
         }
