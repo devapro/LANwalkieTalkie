@@ -1,10 +1,24 @@
-package pro.devapp.walkietalkiek.feature.chat
+package pro.devapp.walkietalkiek.feature.chat.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import org.koin.compose.koinInject
+import pro.devapp.walkietalkiek.feature.chat.ChatViewModel
+import pro.devapp.walkietalkiek.feature.chat.model.ChatAction
 import pro.devapp.walkietalkiek.feature.chat.model.ChatMessageModel
 
 @Composable
 fun ChatTab() {
+
+    val viewModel = koinInject<ChatViewModel>()
+    val state = viewModel.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.onAction(ChatAction.InitScreen)
+        viewModel.startCollectingConnectedDevices()
+    }
+
     val sampleMessages = listOf(
         ChatMessageModel(
             id = "1",
@@ -37,11 +51,10 @@ fun ChatTab() {
     )
 
     ChatContent(
-        messages = sampleMessages,
+        messages = state.value.messages,
         currentUserId = "current_user",
         onSendMessage = { message ->
-            // TODO: Implement actual message sending logic
-            println("Sending message: $message")
+            viewModel.onAction(ChatAction.SendMessage(message))
         }
     )
 }

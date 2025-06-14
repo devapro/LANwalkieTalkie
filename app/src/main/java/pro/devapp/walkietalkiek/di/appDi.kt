@@ -9,6 +9,7 @@ import pro.devapp.walkietalkiek.PermissionState
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import pro.devapp.walkietalkiek.factory.MainScreenInitStateFactory
 import pro.devapp.walkietalkiek.factory.MainTabsFactory
+import pro.devapp.walkietalkiek.feature.chat.di.registerChatDi
 import pro.devapp.walkietalkiek.feature.ptt.di.registerPttDi
 import pro.devapp.walkietalkiek.reducers.ChangeScreenReducer
 import pro.devapp.walkietalkiek.reducers.CheckPermissionsReducer
@@ -26,6 +27,7 @@ val appModule: Module = module {
     registerPttDi()
     registerServiceNetworkDi()
     registerVoiceDi()
+    registerChatDi()
 }
 
 private fun Module.coreDi() {

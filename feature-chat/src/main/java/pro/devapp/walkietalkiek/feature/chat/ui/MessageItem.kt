@@ -1,4 +1,4 @@
-package pro.devapp.walkietalkiek.feature.chat
+package pro.devapp.walkietalkiek.feature.chat.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
