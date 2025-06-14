@@ -5,8 +5,8 @@ import android.net.nsd.NsdServiceInfo
 import android.util.Base64
 import timber.log.Timber
 
-class DiscoveryListener(
-    private val chanelController: ChanelController
+internal class DiscoveryListener(
+    private val chanelController: ChanelControllerImpl
 ) : NsdManager.DiscoveryListener {
     override fun onServiceFound(serviceInfo: NsdServiceInfo) {
         try {

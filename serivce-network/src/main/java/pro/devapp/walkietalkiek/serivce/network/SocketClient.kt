@@ -99,7 +99,8 @@ class SocketClient (
         }
     }
 
-    fun removeClient(hostAddress: String) {
+    fun removeClient(hostAddress: String?) {
+        hostAddress ?: return
         Timber.Forest.i("removeClient $hostAddress")
         sockets[hostAddress]?.apply {
             val socketAddress = InetSocketAddress(

@@ -8,7 +8,7 @@ import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
 import timber.log.Timber
 import java.net.InetSocketAddress
 
-class ClientInfoResolver(
+internal class ClientInfoResolver(
     private val context: Context,
     private val coroutineContextProvider: CoroutineContextProvider
 ) {

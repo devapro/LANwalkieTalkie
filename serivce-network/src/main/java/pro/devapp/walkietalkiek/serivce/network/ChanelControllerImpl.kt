@@ -3,7 +3,9 @@ package pro.devapp.walkietalkiek.serivce.network
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.os.Build
 import android.util.Base64
+import androidx.annotation.RequiresExtension
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -17,7 +19,18 @@ import java.nio.ByteBuffer
 
 private const val SERVICE_TYPE = "_wfwt._tcp" /* WiFi Walkie Talkie */
 
-class ChanelController(
+interface MessageController{
+    fun sendMessage(byteBuffer: ByteBuffer)
+}
+
+interface ClientController{
+    fun startDiscovery()
+    fun stopDiscovery()
+    fun onServiceFound(serviceInfo: NsdServiceInfo)
+    fun onServiceLost(nsdServiceInfo: NsdServiceInfo)
+}
+
+internal class ChanelControllerImpl(
     context: Context,
     private val deviceInfoRepository: DeviceInfoRepository,
     private val connectedDevicesRepository: ConnectedDevicesRepository,
@@ -25,7 +38,7 @@ class ChanelController(
     private val server: SocketServer,
     private val coroutineContextProvider: CoroutineContextProvider,
     private val clientInfoResolver: ClientInfoResolver
-) {
+): MessageController, ClientController {
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val discoveryListener = DiscoveryListener(this)
     private val registrationListener = RegistrationListener(this)
@@ -34,7 +47,7 @@ class ChanelController(
 
     private var pingScope: CoroutineScope? = null
 
-    fun startDiscovery() {
+    override fun startDiscovery() {
         pingScope = coroutineContextProvider.createScope(
             coroutineContextProvider.io
         )
@@ -42,7 +55,7 @@ class ChanelController(
         registerNsdService(port)
     }
 
-    fun stopDiscovery() {
+    override fun stopDiscovery() {
         nsdManager.apply {
             stopServiceDiscovery(discoveryListener)
             unregisterService(registrationListener)
@@ -56,7 +69,7 @@ class ChanelController(
         nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
     }
 
-    fun sendMessage(byteBuffer: ByteBuffer) {
+    override fun sendMessage(byteBuffer: ByteBuffer) {
         client.sendMessage(byteBuffer)
         server.sendMessage(byteBuffer)
     }
@@ -97,7 +110,7 @@ class ChanelController(
         client.sendMessage(ByteBuffer.wrap("ping".toByteArray()))
     }
 
-    fun onServiceFound(serviceInfo: NsdServiceInfo) {
+    override fun onServiceFound(serviceInfo: NsdServiceInfo) {
         // check for self add to list
         Timber.Forest.i("onServiceFound: ${serviceInfo.serviceName} current: $currentServiceName")
         if (serviceInfo.serviceName == currentServiceName) {
@@ -119,7 +132,8 @@ class ChanelController(
         }
     }
 
-    fun onServiceLost(nsdServiceInfo: NsdServiceInfo) {
+    @RequiresExtension(extension = Build.VERSION_CODES.TIRAMISU, version = 7)
+    override fun onServiceLost(nsdServiceInfo: NsdServiceInfo) {
         Timber.Forest.i("onServiceLost: $nsdServiceInfo")
         nsdServiceInfo.hostAddresses.firstOrNull()?.hostAddress?.let {
             connectedDevicesRepository.setHostDisconnected(it)

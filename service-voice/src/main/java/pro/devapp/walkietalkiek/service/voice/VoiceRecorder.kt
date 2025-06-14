@@ -8,7 +8,7 @@ import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import pro.devapp.walkietalkiek.core.mvi.CoroutineContextProvider
-import pro.devapp.walkietalkiek.serivce.network.ChanelController
+import pro.devapp.walkietalkiek.serivce.network.MessageController
 import timber.log.Timber
 import java.lang.Byte
 import java.lang.Short
@@ -20,7 +20,7 @@ import kotlin.arrayOf
 import kotlin.let
 
 class VoiceRecorder(
-    private val chanelController: ChanelController,
+    private val chanelController: MessageController,
     private val coroutineContextProvider: CoroutineContextProvider
 ) {
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO

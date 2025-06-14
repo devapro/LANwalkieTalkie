@@ -73,7 +73,7 @@ class SocketServer(
                     client.sendBufferSize = 8192
                     client.receiveBufferSize = 8192 * 2
                     client.tcpNoDelay = true
-                    val hostAddress = client.inetAddress.hostAddress
+                    val hostAddress = client.inetAddress.hostAddress.orEmpty()
                     outputQueueMap[hostAddress] = LinkedBlockingDeque()
                     connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress, client.port)
                     handleConnection(client)

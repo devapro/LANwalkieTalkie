@@ -4,7 +4,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import timber.log.Timber
 
-class RegistrationListener(private val chanelController: ChanelController) :
+internal class RegistrationListener(private val chanelController: ChanelControllerImpl) :
     NsdManager.RegistrationListener {
     override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
         Timber.Forest.e("onRegistrationFailed: $serviceInfo ($errorCode)")
