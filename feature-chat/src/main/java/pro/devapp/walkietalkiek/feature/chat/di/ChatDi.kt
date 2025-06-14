@@ -6,6 +6,7 @@ import org.koin.core.module.dsl.factoryOf
 import pro.devapp.walkietalkiek.feature.chat.ChatActionProcessor
 import pro.devapp.walkietalkiek.feature.chat.ChatViewModel
 import pro.devapp.walkietalkiek.feature.chat.factory.ChatInitStateFactory
+import pro.devapp.walkietalkiek.feature.chat.mapper.MessageModelMapper
 import pro.devapp.walkietalkiek.feature.chat.reducer.ConnectedDevicesUpdatedReducer
 import pro.devapp.walkietalkiek.feature.chat.reducer.InitScreenReducer
 import pro.devapp.walkietalkiek.feature.chat.reducer.LoadChatHistoryReducer
@@ -17,6 +18,7 @@ import pro.devapp.walkietalkiek.feature.chat.reducer.SendMessageReducer
 fun Module.registerChatDi() {
     reducersDi()
     factoryDi()
+    mapperDi()
     viewModelsDi()
 }
 
@@ -47,6 +49,10 @@ private fun Module.reducersDi() {
             coroutineContextProvider = get()
         )
     }
+}
+
+private fun Module.mapperDi() {
+    factoryOf(::MessageModelMapper)
 }
 
 private fun Module.viewModelsDi() {

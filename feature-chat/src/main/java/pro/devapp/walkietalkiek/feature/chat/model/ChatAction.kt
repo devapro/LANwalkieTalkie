@@ -1,6 +1,7 @@
 package pro.devapp.walkietalkiek.feature.chat.model
 
 import pro.devapp.walkietalkiek.serivce.network.data.model.ClientModel
+import pro.devapp.walkietalkiek.serivce.network.data.model.MessageModel
 
 internal sealed interface ChatAction {
 
@@ -11,8 +12,8 @@ internal sealed interface ChatAction {
     data class SendMessage(
         val content: String
     ): ChatAction
-    data class MessageReceived(
-        val message: ChatMessageModel
+    data class MessagesReceived(
+        val messages: List<MessageModel>
     ): ChatAction
     data class MarkMessageAsRead(
         val messageId: String

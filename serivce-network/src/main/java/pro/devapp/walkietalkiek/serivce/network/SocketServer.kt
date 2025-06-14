@@ -164,7 +164,7 @@ class SocketServer(
                     hostAddress = hostAddress,
                     byteBuffer = ByteBuffer.wrap("pong".toByteArray())
                 )
-            } else {
+            } else if (message != "pong" && message.isNotEmpty()) {
                 textMessagesRepository.addMessage(
                     message = message,
                     hostAddress = hostAddress

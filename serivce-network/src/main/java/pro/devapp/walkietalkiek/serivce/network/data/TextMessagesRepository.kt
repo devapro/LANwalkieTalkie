@@ -13,7 +13,7 @@ class TextMessagesRepository(
     val messages: SharedFlow<List<MessageModel>>
         get() = _messagesFlow
 
-    fun addMessage(
+    internal fun addMessage(
         message: String,
         hostAddress: String
     ) {
