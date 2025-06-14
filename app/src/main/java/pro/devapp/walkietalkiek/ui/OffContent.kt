@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import pro.devapp.walkietalkiek.service.WalkieService
+import kotlin.system.exitProcess
 
 @Composable
 internal fun OffContent() {
@@ -25,6 +26,7 @@ internal fun OffContent() {
                 val serviceIntent = Intent(activity, WalkieService::class.java)
                 activity?.stopService(serviceIntent)
                 activity?.finishAndRemoveTask()
+                exitProcess(0)
             }
         ) {
             Text(text = "Exit WalkieTalkieK")

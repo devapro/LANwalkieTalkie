@@ -25,6 +25,8 @@ class SocketClient (
 ) {
     private val sockets = ConcurrentHashMap<String, Socket>()
 
+    var dataListener: ((bytes: ByteArray) -> Unit)? = null
+
     private val lock = Mutex()
 
     private val reconnectTimerScope = coroutineContextProvider.createScope(
@@ -76,7 +78,9 @@ class SocketClient (
                             Timber.Forest.i("Waiting for socket to close $hostAddress")
                             delay(100L)
                         }
-                        val socket = Socket(hostAddress, socketAddress.port)
+                        val socket = Socket(hostAddress, 9915).apply { //TODO add port provider
+                            tcpNoDelay = true
+                        }
                         socket.receiveBufferSize = 8192 * 2
                         sockets[hostAddress] = socket
                         outputQueueMap[hostAddress] = LinkedBlockingDeque()
@@ -140,7 +144,27 @@ class SocketClient (
                 while (!socket.isClosed && !socket.isInputShutdown) {
                     val readCount = dataInput.read(byteArray)
                     if (readCount > 0) {
-
+                        val data = ByteArray(readCount)
+                        System.arraycopy(byteArray, 0, data, 0, readCount)
+                        if (data.size > 20) {
+                            dataListener?.invoke(data)
+                            Timber.Forest.i("message: audio ${data.size} from ${socket.inetAddress.hostAddress}")
+                        } else {
+                            val message = String(data).trim()
+                            Timber.Forest.i("message: $message from ${socket.inetAddress.hostAddress}")
+//                            if (message == "ping"){
+//                                clientSocket.sendMessageToHost(
+//                                    hostAddress = hostAddress,
+//                                    byteBuffer = ByteBuffer.wrap("pong".toByteArray())
+//                                )
+//                            } else if (message != "pong" && message.isNotEmpty()) {
+//                                textMessagesRepository.addMessage(
+//                                    message = message,
+//                                    hostAddress = hostAddress
+//                                )
+//                            }
+                        }
+                        connectedDevicesRepository.storeDataReceivedTime(socket.inetAddress.hostAddress)
                     }
                     Arrays.fill(byteArray, 0)
                 }

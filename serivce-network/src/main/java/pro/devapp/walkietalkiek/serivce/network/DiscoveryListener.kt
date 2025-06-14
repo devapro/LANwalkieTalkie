@@ -2,7 +2,9 @@ package pro.devapp.walkietalkiek.serivce.network
 
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.os.Build
 import android.util.Base64
+import androidx.annotation.RequiresExtension
 import timber.log.Timber
 
 internal class DiscoveryListener(
@@ -35,6 +37,7 @@ internal class DiscoveryListener(
         Timber.Forest.i("Discovery stopped")
     }
 
+    @RequiresExtension(extension = Build.VERSION_CODES.TIRAMISU, version = 7)
     override fun onServiceLost(serviceInfo: NsdServiceInfo) {
         try {
             val ss =

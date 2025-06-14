@@ -17,7 +17,6 @@ import java.util.Arrays
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 class SocketServer(
     private val connectedDevicesRepository: ConnectedDevicesRepository,
@@ -45,9 +44,10 @@ class SocketServer(
     }
 
     private fun getPort(): Int {
-        return Random.nextInt(1111, 9999).also { port ->
-            Timber.Forest.i("Generated random port: $port")
-        }
+        return 9915
+//        return Random.nextInt(1111, 9999).also { port ->
+//            Timber.Forest.i("Generated random port: $port")
+//        }
     }
 
     /**
@@ -80,7 +80,9 @@ class SocketServer(
                     connectedDevicesRepository.addOrUpdateHostStateToConnected(hostAddress, client.port)
                     handleConnection(client)
                 } catch (e: Exception) {
-                    Timber.Forest.w(e)
+                    if (e !is java.net.SocketTimeoutException) {
+                        Timber.Forest.w("Error accepting connection: ${e.message}")
+                    }
                 }
                 delay(1000L)
             }
