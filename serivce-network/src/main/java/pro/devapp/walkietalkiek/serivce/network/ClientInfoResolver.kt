@@ -46,7 +46,7 @@ internal class ClientInfoResolver(
                 }
 
                 override fun onServiceUpdated(serviceInfo: NsdServiceInfo) {
-                    val socketAddress = InetSocketAddress(serviceInfo.host, serviceInfo.port)
+                    val socketAddress = InetSocketAddress(serviceInfo.hostAddresses.first(), serviceInfo.port)
                     Timber.i("onServiceResolved: $socketAddress")
                     if (!socketAddress.address.isMulticastAddress) {
                         resultListener(socketAddress, serviceInfo)

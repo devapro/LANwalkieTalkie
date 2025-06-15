@@ -17,6 +17,7 @@ import java.util.Arrays
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 class SocketServer(
     private val connectedDevicesRepository: ConnectedDevicesRepository,
@@ -44,10 +45,10 @@ class SocketServer(
     }
 
     private fun getPort(): Int {
-        return 9915
-//        return Random.nextInt(1111, 9999).also { port ->
-//            Timber.Forest.i("Generated random port: $port")
-//        }
+     //   return 9915
+        return Random.nextInt(8111, 9999).also { port ->
+            Timber.Forest.i("Generated random port: $port")
+        }
     }
 
     /**

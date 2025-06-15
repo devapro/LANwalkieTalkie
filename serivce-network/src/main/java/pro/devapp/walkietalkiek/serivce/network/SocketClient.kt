@@ -78,7 +78,7 @@ class SocketClient (
                             Timber.Forest.i("Waiting for socket to close $hostAddress")
                             delay(100L)
                         }
-                        val socket = Socket(hostAddress, 9915).apply { //TODO add port provider
+                        val socket = Socket(hostAddress, socketAddress.port).apply { //TODO add port provider
                             tcpNoDelay = true
                         }
                         socket.receiveBufferSize = 8192 * 2
